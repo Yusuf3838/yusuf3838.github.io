@@ -30,7 +30,7 @@ const Hero = () => {
           className="text-6xl font-bold mb-4"
         >
           <span className="text-neon-pink">Hello, I'm</span>
-          <span className="text-neon-blue"> YourName</span>
+          <span className="text-neon-blue"> Yusuf</span>
         </motion.h1>
         
         <motion.p
