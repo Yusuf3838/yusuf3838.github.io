@@ -204,7 +204,7 @@ const Hero = () => {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
-          className="flex justify-center mt-4 sm:mt-8 md:mt-12 flex-col items-center"
+          className="flex justify-center mt-12 sm:mt-16 md:mt-20 flex-col items-center"
         >
           <div className="relative px-2 py-4 sm:px-4 sm:py-6">
             <motion.h1
