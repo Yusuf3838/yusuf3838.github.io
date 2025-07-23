@@ -199,16 +199,16 @@ const Hero = () => {
       />
 
       {/* Content */}
-      <div className="relative z-20 flex flex-col min-h-screen px-6 py-8">
+      <div className="relative z-20 flex flex-col min-h-screen px-4 py-4 sm:px-6 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
-          className="flex justify-center mt-16 flex-col items-center"
+          className="flex justify-center mt-4 sm:mt-8 md:mt-12 flex-col items-center"
         >
-          <div className="relative px-4 py-6">
+          <div className="relative px-2 py-4 sm:px-4 sm:py-6">
             <motion.h1
-              className={`text-5xl md:text-6xl lg:text-7xl font-black tracking-[0.15em] text-center whitespace-nowrap transition-all duration-200 ${
+              className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-[0.15em] text-center whitespace-nowrap transition-all duration-200 ${
                 flicker ? 'brightness-150 scale-105' : ''
               }`}
               style={{
@@ -225,7 +225,7 @@ const Hero = () => {
             </motion.h1>
 
             <motion.div
-              className={`text-xl md:text-2xl lg:text-3xl font-bold tracking-[0.1em] text-center whitespace-nowrap transition-all duration-200 mt-4 flex items-center gap-2 ${
+              className={`text-sm sm:text-lg md:text-xl lg:text-2xl font-bold tracking-[0.1em] text-center whitespace-nowrap transition-all duration-200 mt-2 sm:mt-3 md:mt-4 flex items-center gap-1 sm:gap-2 ${
                 flicker ? 'brightness-150 scale-105' : ''
               }`}
               style={{
@@ -234,11 +234,11 @@ const Hero = () => {
                   ? '0 0 5px #00FF7F, 0 0 10px #00FF7F, 0 0 20px #00FF7F, 0 0 40px #00FF7F'
                   : '0 0 5px #00FF7F, 0 0 10px #00FF7F, 0 0 20px #00FF7F',
                 WebkitTextStroke: '0.25px #00FF7F',
-                fontFamily: "'Overcame Demo Outline', 'Arial Black', sans-serif",
+                fontFamily: "'Overcame Demo Outline', 'Arial Black', sans-serif'",
                 textTransform: 'uppercase'
               }}
             >
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse" />
               Always Open / Always Coding
             </motion.div>
 
@@ -247,10 +247,10 @@ const Hero = () => {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2 }}
-              className="flex flex-col sm:flex-row items-start justify-start gap-4 text-sm mt-4 ml-[-20px]"
+              className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 text-xs sm:text-sm mt-2 sm:mt-4 ml-0 sm:ml-[-20px]"
             >
-              <div className="relative flex items-center gap-2 px-6 py-2 rounded-full border-2 border-orange-400/60 bg-transparent backdrop-blur-md">
-                <Code className="w-5 h-5 text-orange-400" />
+              <div className="relative flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-1 sm:py-2 rounded-full border-2 border-orange-400/60 bg-transparent backdrop-blur-md">
+                <Code className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400" />
                 <span className="text-gray-100 font-semibold">Full Stack Developer</span>
                 <motion.div
                   className="absolute inset-0 rounded-full"
@@ -258,8 +258,8 @@ const Hero = () => {
                   transition={{ duration: 0.2 }}
                 />
               </div>
-              <div className="relative flex items-center gap-2 px-6 py-2 rounded-full border-2 border-yellow-400/60 bg-transparent backdrop-blur-md">
-                <Palette className="w-5 h-5 text-yellow-400" />
+              <div className="relative flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-1 sm:py-2 rounded-full border-2 border-yellow-400/60 bg-transparent backdrop-blur-md">
+                <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
                 <span className="text-gray-100 font-semibold">UI/UX Designer</span>
                 <motion.div
                   className="absolute inset-0 rounded-full"
