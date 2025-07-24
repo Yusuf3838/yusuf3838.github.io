@@ -218,7 +218,7 @@ const Hero = () => {
   }, [mouseX, mouseY]);
 
   return (
-    <section ref={heroRef} id="home" className="relative min-h-screen w-full overflow-hidden bg-black pt-32 sm:pt-36 md:pt-40">
+    <section ref={heroRef} id="home" className="relative min-h-screen w-full overflow-hidden bg-black pt-20 sm:pt-24 md:pt-28">
       {/* Scan Lines Effect */}
       <div className="absolute inset-0 z-30 pointer-events-none opacity-20">
         <motion.div
@@ -346,18 +346,22 @@ const Hero = () => {
       >
         <motion.div
           initial={{ opacity: 0, y: -100, rotateX: -10 }}
-          animate={{ opacity: 1, y: -50, rotateX: 0 }}
+          animate={{ opacity: 1, y: -40, rotateX: 0 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="flex justify-center mt-4 sm:mt-6 md:mt-8 flex-col items-center"
+          className="flex justify-center mt-2 sm:mt-4 md:mt-6 flex-col items-center"
         >
           <div className="relative px-2 py-2 sm:px-4 sm:py-4">
-            {/* Enhanced Main Title with Perfect Neon Effect using PNG */}
+            {/* Enhanced Main Title with Perfect Neon Effect using PNG - RESPONSIVE */}
             <div className="relative text-center">
               <motion.img
                 src="/Name (1).png"
                 alt="Yusuf Sheikhali"
-                className={`neon-image-main ${flicker ? 'flicker' : ''} ${glitchText ? 'glitch-effect' : ''}`}
-                style={{ maxWidth: '25%', height: 'auto', margin: '0 auto', filter: 'drop-shadow(0 0 15px #FF6B35) drop-shadow(0 0 30px #FF4500)' }}
+                className={`neon-image-main ${flicker ? 'flicker' : ''} ${glitchText ? 'glitch-effect' : ''} h-auto mx-auto`}
+                style={{ 
+                  width: 'min(80vw, max(320px, 25vw))',
+                  maxWidth: '600px',
+                  filter: 'drop-shadow(0 0 15px #FF6B35) drop-shadow(0 0 30px #FF4500)' 
+                }}
                 animate={glitchText ? {
                   x: [0, -2, 2, -1, 1, 0],
                 } : {}}
@@ -372,9 +376,9 @@ const Hero = () => {
               )}
             </div>
 
-            {/* Enhanced Subtitle with Perfect Neon using PNGs side by side */}
+            {/* Enhanced Subtitle with Perfect Neon using PNGs side by side - RESPONSIVE */}
             <motion.div
-              className={`neon-image-subtitle ${flicker ? 'flicker' : ''} text-sm sm:text-lg md:text-xl lg:text-2xl font-bold tracking-[0.1em] text-center whitespace-nowrap transition-all duration-200 mt-1 sm:mt-2 flex justify-center gap-0 sm:gap-1 relative uppercase`}
+              className={`neon-image-subtitle ${flicker ? 'flicker' : ''} text-sm sm:text-lg md:text-xl lg:text-2xl font-bold tracking-[0.1em] text-center whitespace-nowrap transition-all duration-200 mt-1 sm:mt-2 flex justify-center items-center gap-0 sm:gap-1 relative uppercase`}
             >
               <motion.span 
                 className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full shadow-lg shadow-green-400/50" 
@@ -392,14 +396,22 @@ const Hero = () => {
               <motion.img
                 src="/AlwaysOpen (1).png"
                 alt="Always Open"
-                className="inline-block"
-                style={{ maxWidth: '20%', height: 'auto', filter: 'drop-shadow(0 0 15px #00FF7F) drop-shadow(0 0 30px #32CD32)' }}
+                className="inline-block h-auto"
+                style={{ 
+                  width: 'min(40vw, max(128px, 20vw))',
+                  maxWidth: '240px',
+                  filter: 'drop-shadow(0 0 15px #00FF7F) drop-shadow(0 0 30px #32CD32)' 
+                }}
               />
               <motion.img
                 src="/AlwaysCoding (1).png"
                 alt="Always Coding"
-                className="inline-block"
-                style={{ maxWidth: '20%', height: 'auto', filter: 'drop-shadow(0 0 15px #00FF7F) drop-shadow(0 0 30px #32CD32)' }}
+                className="inline-block h-auto"
+                style={{ 
+                  width: 'min(50vw, max(137px, 27vw))',
+                  maxWidth: '290px',
+                  filter: 'drop-shadow(0 0 15px #00FF7F) drop-shadow(0 0 30px #32CD32)' 
+                }}
               />
               <motion.span 
                 className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full shadow-lg shadow-green-400/50" 
@@ -416,88 +428,98 @@ const Hero = () => {
               />
             </motion.div>
 
-            {/* Welcome Text with Perfect Neon using PNG */}
-            <div className="relative text-center mt-1 sm:mt-2">
+            {/* Welcome Text with Perfect Neon using PNG - RESPONSIVE */}
+            <div className="relative text-center mt-0 sm:mt-1">
               <motion.img
                 src="/Slogan (1).png"
                 alt="Welcome to my digital space"
-                className={`neon-image-welcome ${flicker ? 'flicker' : ''} ${glitchText ? 'glitch-effect' : ''}`}
-                style={{ maxWidth: '25%', height: 'auto', margin: '0 auto', filter: 'drop-shadow(0 0 15px #DA291C) drop-shadow(0 0 30px #FF4500)' }}
+                className={`neon-image-welcome ${flicker ? 'flicker' : ''} ${glitchText ? 'glitch-effect' : ''} h-auto mx-auto`}
+                style={{ 
+                  width: 'min(70vw, max(280px, 22vw))',
+                  maxWidth: '520px',
+                  filter: 'drop-shadow(0 0 15px #DA291C) drop-shadow(0 0 30px #FF4500)' 
+                }}
                 animate={glitchText ? {
                   x: [0, -2, 2, -1, 1, 0],
                 } : {}}
                 transition={{ duration: 0.15 }}
               />
             </div>
+
+            {/* Enhanced Professional Badges - Moved right below welcome text */}
+            <motion.div
+              initial={{ opacity: 0, y: 60 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.4, duration: 0.8 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 text-xs sm:text-sm mt-3 sm:mt-4"
+            >
+              <motion.div 
+                className="relative flex items-center gap-1 sm:gap-2 px-4 sm:px-7 py-2 sm:py-3 rounded-full border-2 border-[#FF6720]/70 bg-black/20 backdrop-blur-lg"
+                whileHover={{ scale: 1.05, y: -2 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <Code className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF6720]" />
+                <span className="text-gray-100 font-semibold">Full Stack Developer</span>
+                <motion.div
+                  className="absolute inset-0 rounded-full border-2"
+                  animate={{ 
+                    borderColor: badgeFlicker1 ? 'rgba(255, 103, 32, 1)' : 'rgba(255, 103, 32, 0.7)',
+                    boxShadow: badgeFlicker1 
+                      ? '0 0 25px rgba(255, 103, 32, 0.9), inset 0 0 25px rgba(255, 103, 32, 0.2)' 
+                      : '0 0 15px rgba(255, 103, 32, 0.5), inset 0 0 15px rgba(255, 103, 32, 0.1)'
+                  }}
+                  transition={{ duration: 0.3 }}
+                />
+                <Zap className="absolute -top-1 -right-1 w-3 h-3 text-[#FF6720]/70 opacity-70" />
+              </motion.div>
+              
+              <motion.div 
+                className="relative flex items-center gap-1 sm:gap-2 px-4 sm:px-7 py-2 sm:py-3 rounded-full border-2 border-[#007A53]/70 bg-black/20 backdrop-blur-lg"
+                whileHover={{ scale: 1.05, y: -2 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-[#007A53]" />
+                <span className="text-gray-100 font-semibold">UI/UX Designer</span>
+                <motion.div
+                  className="absolute inset-0 rounded-full border-2"
+                  animate={{ 
+                    borderColor: badgeFlicker2 ? 'rgba(0, 122, 83, 1)' : 'rgba(0, 122, 83, 0.7)',
+                    boxShadow: badgeFlicker2 
+                      ? '0 0 25px rgba(0, 122, 83, 0.9), inset 0 0 25px rgba(0, 122, 83, 0.2)' 
+                      : '0 0 15px rgba(0, 122, 83, 0.5), inset 0 0 15px rgba(0, 122, 83, 0.1)'
+                  }}
+                  transition={{ duration: 0.3 }}
+                />
+                <Terminal className="absolute -top-1 -right-1 w-3 h-3 text-[#007A53]/70 opacity-70" />
+              </motion.div>
+
+              <motion.div 
+                className="relative flex items-center gap-1 sm:gap-2 px-4 sm:px-7 py-2 sm:py-3 rounded-full border-2 border-[#DA291C]/70 bg-black/20 backdrop-blur-lg"
+                whileHover={{ scale: 1.05, y: -2 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-[#DA291C]" />
+                <span className="text-gray-100 font-semibold">Creative Technologist</span>
+                <motion.div
+                  className="absolute inset-0 rounded-full border-2"
+                  animate={{ 
+                    borderColor: badgeFlicker1 ? 'rgba(218, 41, 28, 1)' : 'rgba(218, 41, 28, 0.7)',
+                    boxShadow: badgeFlicker1 
+                      ? '0 0 25px rgba(218, 41, 28, 0.9), inset 0 0 25px rgba(218, 41, 28, 0.2)' 
+                      : '0 0 15px rgba(218, 41, 28, 0.5), inset 0 0 15px rgba(218, 41, 28, 0.1)'
+                  }}
+                  transition={{ duration: 0.3 }}
+                />
+                <Code className="absolute -top-1 -right-1 w-3 h-3 text-[#DA291C]/70 opacity-70" />
+              </motion.div>
+            </motion.div>
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: -10 }}
-          transition={{ delay: 1.4, duration: 0.8 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 text-xs sm:text-sm mt-8 sm:mt-12 md:mt-16"
+          className="mt-8 sm:mt-12 md:mt-16"
         >
-          {/* Enhanced Professional Badges */}
-          <motion.div 
-            className="relative flex items-center gap-1 sm:gap-2 px-4 sm:px-7 py-2 sm:py-3 rounded-full border-2 border-[#FF6720]/70 bg-black/20 backdrop-blur-lg"
-            whileHover={{ scale: 1.05, y: -2 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <Code className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF6720]" />
-            <span className="text-gray-100 font-semibold">Full Stack Developer</span>
-            <motion.div
-              className="absolute inset-0 rounded-full border-2"
-              animate={{ 
-                borderColor: badgeFlicker1 ? 'rgba(255, 103, 32, 1)' : 'rgba(255, 103, 32, 0.7)',
-                boxShadow: badgeFlicker1 
-                  ? '0 0 25px rgba(255, 103, 32, 0.9), inset 0 0 25px rgba(255, 103, 32, 0.2)' 
-                  : '0 0 15px rgba(255, 103, 32, 0.5), inset 0 0 15px rgba(255, 103, 32, 0.1)'
-              }}
-              transition={{ duration: 0.3 }}
-            />
-            <Zap className="absolute -top-1 -right-1 w-3 h-3 text-[#FF6720]/70 opacity-70" />
-          </motion.div>
-          
-          <motion.div 
-            className="relative flex items-center gap-1 sm:gap-2 px-4 sm:px-7 py-2 sm:py-3 rounded-full border-2 border-[#007A53]/70 bg-black/20 backdrop-blur-lg"
-            whileHover={{ scale: 1.05, y: -2 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-[#007A53]" />
-            <span className="text-gray-100 font-semibold">UI/UX Designer</span>
-            <motion.div
-              className="absolute inset-0 rounded-full border-2"
-              animate={{ 
-                borderColor: badgeFlicker2 ? 'rgba(0, 122, 83, 1)' : 'rgba(0, 122, 83, 0.7)',
-                boxShadow: badgeFlicker2 
-                  ? '0 0 25px rgba(0, 122, 83, 0.9), inset 0 0 25px rgba(0, 122, 83, 0.2)' 
-                  : '0 0 15px rgba(0, 122, 83, 0.5), inset 0 0 15px rgba(0, 122, 83, 0.1)'
-              }}
-              transition={{ duration: 0.3 }}
-            />
-            <Terminal className="absolute -top-1 -right-1 w-3 h-3 text-[#007A53]/70 opacity-70" />
-          </motion.div>
-
-          <motion.div 
-            className="relative flex items-center gap-1 sm:gap-2 px-4 sm:px-7 py-2 sm:py-3 rounded-full border-2 border-[#DA291C]/70 bg-black/20 backdrop-blur-lg"
-            whileHover={{ scale: 1.05, y: -2 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-[#DA291C]" />
-            <span className="text-gray-100 font-semibold">Creative Technologist</span>
-            <motion.div
-              className="absolute inset-0 rounded-full border-2"
-              animate={{ 
-                borderColor: badgeFlicker1 ? 'rgba(218, 41, 28, 1)' : 'rgba(218, 41, 28, 0.7)',
-                boxShadow: badgeFlicker1 
-                  ? '0 0 25px rgba(218, 41, 28, 0.9), inset 0 0 25px rgba(218, 41, 28, 0.2)' 
-                  : '0 0 15px rgba(218, 41, 28, 0.5), inset 0 0 15px rgba(218, 41, 28, 0.1)'
-              }}
-              transition={{ duration: 0.3 }}
-            />
-            <Code className="absolute -top-1 -right-1 w-3 h-3 text-[#DA291C]/70 opacity-70" />
-          </motion.div>
+          {/* Enhanced Professional Badges removed from here - moved above */}
         </motion.div>
 
         <div className="flex-1" />
