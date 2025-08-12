@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Code, Palette, Zap, Terminal } from 'lucide-react';
 
@@ -43,6 +43,8 @@ const Hero = () => {
   const [lightningFlash, setLightningFlash] = useState(false);
   const [codeRain, setCodeRain] = useState([]);
   const [hologramFlicker, setHologramFlicker] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [loadedImages, setLoadedImages] = useState(new Set());
 
   const heroRef = useRef(null);
   const mouseX = useMotionValue(0);
@@ -50,31 +52,74 @@ const Hero = () => {
   const springConfig = { damping: 25, stiffness: 700 };
   const mouseXSpring = useSpring(mouseX, springConfig);
   const mouseYSpring = useSpring(mouseY, springConfig);
-  
+
   // Advanced mouse parallax transforms
   const parallaxX = useTransform(mouseXSpring, [0, 1], [-20, 20]);
   const parallaxY = useTransform(mouseYSpring, [0, 1], [-10, 10]);
   const rotateX = useTransform(mouseYSpring, [0, 1], [5, -5]);
   const rotateY = useTransform(mouseXSpring, [0, 1], [-5, 5]);
 
+  // Critical images to preload
+  const criticalImages = [
+    '/pexels-daydream-753072845-30918259.jpg',
+    '/Name (1).png',
+    '/AlwaysOpen (1).png',
+    '/AlwaysCoding (1).png',
+    '/Slogan (1).png',
+    ...Object.values(skillIcons).slice(0, 12), // Preload first 12 skill icons
+  ];
+
+  // Preload images
+  useEffect(() => {
+    const preloadImages = async () => {
+      const imagePromises = criticalImages.map((src) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.src = src;
+          img.onload = () => {
+            setLoadedImages((prev) => new Set([...prev, src]));
+            resolve(src);
+          };
+          img.onerror = () => {
+            console.warn(`Failed to load image: ${src}`);
+            resolve(src); // Resolve even on error to avoid blocking
+          };
+          img.decode().catch(() => {}); // Decode image for faster rendering
+        });
+      });
+
+      try {
+        await Promise.all(imagePromises);
+        setImagesLoaded(true);
+      } catch (error) {
+        console.warn('Some images failed to preload:', error);
+        setImagesLoaded(true); // Proceed even if some images fail
+      }
+    };
+
+    preloadImages();
+  }, []);
+
   // Enhanced flicker patterns with glitch effects
   useEffect(() => {
+    if (!imagesLoaded) return;
+
     const createAdvancedFlicker = () => {
       const patterns = [
         [150, 80, 120, 250, 100],
         [300, 150, 200],
         [80, 50, 100, 80, 150],
-        [200, 100, 80, 200, 120, 90]
+        [200, 100, 80, 200, 120, 90],
       ];
       const pattern = patterns[Math.floor(Math.random() * patterns.length)];
       let delay = 0;
-      
+
       pattern.forEach((duration, index) => {
         setTimeout(() => {
           setFlicker(true);
           if (Math.random() > 0.7) setGlitchText(true);
           if (Math.random() > 0.8) setLightningFlash(true);
-          
+
           setTimeout(() => {
             setFlicker(false);
             setGlitchText(false);
@@ -84,30 +129,36 @@ const Hero = () => {
         delay += duration + (index === 0 ? 100 : 50);
       });
     };
-    
+
     const interval = setInterval(createAdvancedFlicker, Math.random() * 3500 + 2500);
     return () => clearInterval(interval);
-  }, []);
+  }, [imagesLoaded]);
 
   // Hologram effect
   useEffect(() => {
+    if (!imagesLoaded) return;
+
     const interval = setInterval(() => {
       setHologramFlicker(true);
       setTimeout(() => setHologramFlicker(false), 200);
     }, Math.random() * 8000 + 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [imagesLoaded]);
 
   // Scan lines animation
   useEffect(() => {
+    if (!imagesLoaded) return;
+
     const interval = setInterval(() => {
-      setScanLines(prev => (prev + 1) % 100);
+      setScanLines((prev) => (prev + 1) % 100);
     }, 50);
     return () => clearInterval(interval);
-  }, []);
+  }, [imagesLoaded]);
 
   // Badge flickers with enhanced timing
   useEffect(() => {
+    if (!imagesLoaded) return;
+
     const interval1 = setInterval(() => {
       setBadgeFlicker1(true);
       setTimeout(() => setBadgeFlicker1(false), 200);
@@ -122,10 +173,12 @@ const Hero = () => {
       clearInterval(interval1);
       clearInterval(interval2);
     };
-  }, []);
+  }, [imagesLoaded]);
 
   // Enhanced rain with electrical effects
   useEffect(() => {
+    if (!imagesLoaded) return;
+
     const createRainDrop = () => ({
       id: Math.random(),
       x: Math.random() * 100,
@@ -133,35 +186,37 @@ const Hero = () => {
       delay: Math.random() * 1.5,
       opacity: Math.random() * 0.8 + 0.3,
       isElectric: Math.random() > 0.85,
-      thickness: Math.random() > 0.8 ? 'w-1' : 'w-0.5'
+      thickness: Math.random() > 0.8 ? 'w-1' : 'w-0.5',
     });
 
     const interval = setInterval(() => {
-      setRainDrops(prev => {
+      setRainDrops((prev) => {
         const newDrops = [...prev, createRainDrop()];
         return newDrops.length > 25 ? newDrops.slice(-25) : newDrops;
       });
     }, 400);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [imagesLoaded]);
 
   // Code rain effect
   useEffect(() => {
+    if (!imagesLoaded) return;
+
     const characters = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
-    
+
     const createCodeDrop = () => ({
       id: Math.random(),
       x: Math.random() * 100,
       char: characters[Math.floor(Math.random() * characters.length)],
       duration: Math.random() * 3 + 4,
       delay: Math.random() * 2,
-      opacity: Math.random() * 0.6 + 0.2
+      opacity: Math.random() * 0.6 + 0.2,
     });
 
     const interval = setInterval(() => {
       if (Math.random() > 0.7) {
-        setCodeRain(prev => {
+        setCodeRain((prev) => {
           const newDrops = [...prev, createCodeDrop()];
           return newDrops.length > 15 ? newDrops.slice(-15) : newDrops;
         });
@@ -169,7 +224,7 @@ const Hero = () => {
     }, 800);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [imagesLoaded]);
 
   // Enhanced mouse tracking
   useEffect(() => {
@@ -189,16 +244,16 @@ const Hero = () => {
         const rect = heroRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        const newEffect = { 
-          id: Math.random(), 
-          x, 
-          y, 
+        const newEffect = {
+          id: Math.random(),
+          x,
+          y,
           timestamp: Date.now(),
-          type: Math.random() > 0.5 ? 'electric' : 'neon'
+          type: Math.random() > 0.5 ? 'electric' : 'neon',
         };
-        setClickEffects(prev => [...prev, newEffect]);
+        setClickEffects((prev) => [...prev, newEffect]);
         setTimeout(() => {
-          setClickEffects(prev => prev.filter(effect => effect.id !== newEffect.id));
+          setClickEffects((prev) => prev.filter((effect) => effect.id !== newEffect.id));
         }, 1500);
       }
     };
@@ -217,8 +272,56 @@ const Hero = () => {
     };
   }, [mouseX, mouseY]);
 
+  // Loading screen component
+  const LoadingScreen = () => (
+    <motion.div
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+    >
+      <div className="text-center">
+        <motion.div
+          className="w-16 h-16 border-4 border-orange-500/30 border-t-orange-500 rounded-full mx-auto mb-4"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.p
+          className="text-orange-500 font-mono text-lg"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          Loading Experience...
+        </motion.p>
+        <div className="mt-4 flex justify-center space-x-1">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="w-2 h-2 bg-orange-500 rounded-full"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.2 }}
+            />
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  // Show loading screen until images are loaded
+  if (!imagesLoaded) {
+    return <LoadingScreen />;
+  }
+
   return (
-    <section ref={heroRef} id="home" className="relative min-h-screen w-full overflow-hidden bg-black pt-20 sm:pt-24 md:pt-28">
+    <motion.section
+      ref={heroRef}
+      id="home"
+      className="relative min-h-screen w-full overflow-hidden bg-black pt-20 sm:pt-24 md:pt-28"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Scan Lines Effect */}
       <div className="absolute inset-0 z-30 pointer-events-none opacity-20">
         <motion.div
@@ -238,27 +341,44 @@ const Hero = () => {
         />
       )}
 
-      {/* Enhanced Edge Fades */}
-      <div className="absolute inset-0 z-15 pointer-events-none">
-        <div className="absolute inset-x-0 bottom-0 h-[35%] bg-gradient-to-t from-black via-black/60 to-transparent" />
-        <div className="absolute inset-y-0 left-0 w-[12%] bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
-        <div className="absolute inset-y-0 right-0 w-[12%] bg-gradient-to-l from-black/80 via-black/30 to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-[20%] bg-gradient-to-b from-black/40 to-transparent" />
-      </div>
+      {/* Enhanced Cloud-Like Vignette Effect */}
+      <motion.div
+        className="absolute inset-0 z-15 pointer-events-none"
+        animate={{
+          opacity: [0.8, 0.9, 0.8],
+          scale: [1, 1.02, 1],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          repeatType: "reverse",
+          ease: "easeInOut",
+        }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_30%,rgba(0,0,0,0.7)_70%,rgba(0,0,0,0.9)_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-[25%] bg-gradient-to-b from-black/90 via-black/50 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+        <div className="absolute inset-y-0 left-0 w-[15%] bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-[15%] bg-gradient-to-l from-black/90 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_1200px_800px_at_50%_50%,transparent_50%,rgba(0,0,0,0.6)_80%)]" />
+      </motion.div>
 
       {/* Background with advanced parallax */}
-      <motion.div 
+      <motion.div
         className="absolute inset-0 z-0"
         style={{ x: parallaxX, y: parallaxY }}
-        animate={{ 
-          x: [0, -15, 0], 
+        initial={{ opacity: 0, scale: 1.1 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          x: [0, -15, 0],
           y: [0, -8, 0],
-          scale: flicker ? [1, 1.02, 1] : [1, 1.01, 1]
         }}
-        transition={{ 
-          duration: flicker ? 0.2 : 25, 
-          repeat: Infinity, 
-          ease: flicker ? "easeInOut" : "linear" 
+        transition={{
+          opacity: { duration: 0.8 },
+          scale: { duration: 0.8 },
+          x: { duration: 25, repeat: Infinity, ease: "linear" },
+          y: { duration: 25, repeat: Infinity, ease: "linear" },
         }}
       >
         <div
@@ -268,8 +388,8 @@ const Hero = () => {
           style={{
             backgroundImage: 'url(/pexels-daydream-753072845-30918259.jpg)',
             filter: `
-              saturate(${flicker ? '1.5' : '1.2'}) 
-              hue-rotate(${flicker ? '8deg' : '3deg'}) 
+              saturate(${flicker ? '1.5' : '1.2'})
+              hue-rotate(${flicker ? '8deg' : '3deg'})
               brightness(${flicker ? '0.95' : '0.45'})
               ${glitchText ? 'blur(0.5px)' : ''}
             `,
@@ -283,15 +403,15 @@ const Hero = () => {
           <motion.div
             key={drop.id}
             className={`absolute ${drop.thickness} h-16 ${
-              drop.isElectric 
-                ? 'bg-gradient-to-b from-transparent via-cyan-300/60 to-transparent shadow-lg shadow-cyan-400/50' 
+              drop.isElectric
+                ? 'bg-gradient-to-b from-transparent via-cyan-300/60 to-transparent shadow-lg shadow-cyan-400/50'
                 : 'bg-gradient-to-b from-transparent via-blue-200/40 to-transparent'
             }`}
             style={{ left: `${drop.x}%`, top: '-64px', opacity: drop.opacity }}
-            animate={{ 
-              y: [0, window.innerHeight + 70], 
+            animate={{
+              y: [0, window.innerHeight + 70],
               opacity: [0, drop.opacity, drop.opacity * 0.8, 0],
-              x: drop.isElectric ? [0, Math.sin(Date.now()) * 2, 0] : [0, 1, 0]
+              x: drop.isElectric ? [0, Math.sin(Date.now()) * 2, 0] : [0, 1, 0],
             }}
             transition={{ duration: drop.duration, delay: drop.delay, ease: "linear" }}
           />
@@ -305,9 +425,9 @@ const Hero = () => {
             key={drop.id}
             className="absolute text-green-300/60 text-sm font-mono"
             style={{ left: `${drop.x}%`, top: '-20px', opacity: drop.opacity }}
-            animate={{ 
-              y: [0, window.innerHeight + 30], 
-              opacity: [0, drop.opacity, 0]
+            animate={{
+              y: [0, window.innerHeight + 30],
+              opacity: [0, drop.opacity, 0],
             }}
             transition={{ duration: drop.duration, delay: drop.delay, ease: "linear" }}
           >
@@ -330,18 +450,18 @@ const Hero = () => {
               radial-gradient(ellipse 1200px 800px at 50% 10%, rgba(255,240,180,0.3) 0%, rgba(255,235,160,0.18) 20%, rgba(255,230,140,0.12) 35%, rgba(255,225,120,0.06) 55%, transparent 80%),
               radial-gradient(ellipse 600px 400px at 25% 75%, rgba(0,255,127,0.08) 0%, rgba(0,255,127,0.04) 40%, transparent 70%),
               radial-gradient(ellipse 400px 300px at 75% 25%, rgba(255,69,0,0.06) 0%, rgba(255,69,0,0.03) 50%, transparent 80%)
-            `
+            `,
         }}
       />
 
       {/* Content Container with 3D Transform */}
-      <motion.div 
+      <motion.div
         className="relative z-20 flex flex-col min-h-screen px-4 py-4 sm:px-6 sm:py-6"
-        style={{ 
+        style={{
           rotateX: rotateX,
           rotateY: rotateY,
           transformStyle: "preserve-3d",
-          perspective: 1000
+          perspective: 1000,
         }}
       >
         <motion.div
@@ -357,15 +477,14 @@ const Hero = () => {
                 src="/Name (1).png"
                 alt="Yusuf Sheikhali"
                 className={`neon-image-main ${flicker ? 'flicker' : ''} ${glitchText ? 'glitch-effect' : ''} h-auto mx-auto`}
-                style={{ 
+                style={{
                   width: 'min(80vw, max(320px, 25vw))',
                   maxWidth: '600px',
-                  filter: 'drop-shadow(0 0 15px #FF6B35) drop-shadow(0 0 30px #FF4500)' 
+                  filter: 'drop-shadow(0 0 15px #FF6B35) drop-shadow(0 0 30px #FF4500)',
                 }}
-                animate={glitchText ? {
-                  x: [0, -2, 2, -1, 1, 0],
-                } : {}}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
               />
               {hologramFlicker && (
                 <motion.div
@@ -379,17 +498,20 @@ const Hero = () => {
             {/* Enhanced Subtitle with Perfect Neon using PNGs side by side - RESPONSIVE */}
             <motion.div
               className={`neon-image-subtitle ${flicker ? 'flicker' : ''} text-sm sm:text-lg md:text-xl lg:text-2xl font-bold tracking-[0.1em] text-center whitespace-nowrap transition-all duration-200 mt-1 sm:mt-2 flex justify-center items-center gap-0 sm:gap-1 relative uppercase`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
             >
-              <motion.span 
-                className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full shadow-lg shadow-green-400/50" 
-                animate={{ 
+              <motion.span
+                className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full shadow-lg shadow-green-400/50"
+                animate={{
                   scale: [1, 1.5, 1],
                   opacity: [0.7, 1, 0.7],
                   boxShadow: [
                     '0 0 5px rgba(0, 255, 127, 0.5)',
                     '0 0 20px rgba(0, 255, 127, 0.8)',
-                    '0 0 5px rgba(0, 255, 127, 0.5)'
-                  ]
+                    '0 0 5px rgba(0, 255, 127, 0.5)',
+                  ],
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
@@ -397,32 +519,38 @@ const Hero = () => {
                 src="/AlwaysOpen (1).png"
                 alt="Always Open"
                 className="inline-block h-auto"
-                style={{ 
+                style={{
                   width: 'min(40vw, max(128px, 20vw))',
                   maxWidth: '240px',
-                  filter: 'drop-shadow(0 0 15px #00FF7F) drop-shadow(0 0 30px #32CD32)' 
+                  filter: 'drop-shadow(0 0 15px #00FF7F) drop-shadow(0 0 30px #32CD32)',
                 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
               />
               <motion.img
                 src="/AlwaysCoding (1).png"
                 alt="Always Coding"
                 className="inline-block h-auto"
-                style={{ 
+                style={{
                   width: 'min(50vw, max(137px, 27vw))',
                   maxWidth: '290px',
-                  filter: 'drop-shadow(0 0 15px #00FF7F) drop-shadow(0 0 30px #32CD32)' 
+                  filter: 'drop-shadow(0 0 15px #00FF7F) drop-shadow(0 0 30px #32CD32)',
                 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
               />
-              <motion.span 
-                className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full shadow-lg shadow-green-400/50" 
-                animate={{ 
+              <motion.span
+                className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full shadow-lg shadow-green-400/50"
+                animate={{
                   scale: [1, 1.5, 1],
                   opacity: [0.7, 1, 0.7],
                   boxShadow: [
                     '0 0 5px rgba(0, 255, 127, 0.5)',
                     '0 0 20px rgba(0, 255, 127, 0.8)',
-                    '0 0 5px rgba(0, 255, 127, 0.5)'
-                  ]
+                    '0 0 5px rgba(0, 255, 127, 0.5)',
+                  ],
                 }}
                 transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
               />
@@ -434,26 +562,25 @@ const Hero = () => {
                 src="/Slogan (1).png"
                 alt="Welcome to my digital space"
                 className={`neon-image-welcome ${flicker ? 'flicker' : ''} ${glitchText ? 'glitch-effect' : ''} h-auto mx-auto`}
-                style={{ 
+                style={{
                   width: 'min(70vw, max(280px, 22vw))',
                   maxWidth: '520px',
-                  filter: 'drop-shadow(0 0 15px #DA291C) drop-shadow(0 0 30px #FF4500)' 
+                  filter: 'drop-shadow(0 0 15px #DA291C) drop-shadow(0 0 30px #FF4500)',
                 }}
-                animate={glitchText ? {
-                  x: [0, -2, 2, -1, 1, 0],
-                } : {}}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1.0 }}
               />
             </div>
 
-            {/* Enhanced Professional Badges - Moved right below welcome text */}
+            {/* Enhanced Professional Badges */}
             <motion.div
               initial={{ opacity: 0, y: 60 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.4, duration: 0.8 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 text-xs sm:text-sm mt-3 sm:mt-4"
             >
-              <motion.div 
+              <motion.div
                 className="relative flex items-center gap-1 sm:gap-2 px-4 sm:px-7 py-2 sm:py-3 rounded-full border-2 border-[#FF6720]/70 bg-black/20 backdrop-blur-lg"
                 whileHover={{ scale: 1.05, y: -2 }}
                 transition={{ type: "spring", stiffness: 400 }}
@@ -462,18 +589,18 @@ const Hero = () => {
                 <span className="text-gray-100 font-semibold">Full Stack Developer</span>
                 <motion.div
                   className="absolute inset-0 rounded-full border-2"
-                  animate={{ 
+                  animate={{
                     borderColor: badgeFlicker1 ? 'rgba(255, 103, 32, 1)' : 'rgba(255, 103, 32, 0.7)',
-                    boxShadow: badgeFlicker1 
-                      ? '0 0 25px rgba(255, 103, 32, 0.9), inset 0 0 25px rgba(255, 103, 32, 0.2)' 
-                      : '0 0 15px rgba(255, 103, 32, 0.5), inset 0 0 15px rgba(255, 103, 32, 0.1)'
+                    boxShadow: badgeFlicker1
+                      ? '0 0 25px rgba(255, 103, 32, 0.9), inset 0 0 25px rgba(255, 103, 32, 0.2)'
+                      : '0 0 15px rgba(255, 103, 32, 0.5), inset 0 0 15px rgba(255, 103, 32, 0.1)',
                   }}
                   transition={{ duration: 0.3 }}
                 />
                 <Zap className="absolute -top-1 -right-1 w-3 h-3 text-[#FF6720]/70 opacity-70" />
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="relative flex items-center gap-1 sm:gap-2 px-4 sm:px-7 py-2 sm:py-3 rounded-full border-2 border-[#007A53]/70 bg-black/20 backdrop-blur-lg"
                 whileHover={{ scale: 1.05, y: -2 }}
                 transition={{ type: "spring", stiffness: 400 }}
@@ -482,18 +609,18 @@ const Hero = () => {
                 <span className="text-gray-100 font-semibold">UI/UX Designer</span>
                 <motion.div
                   className="absolute inset-0 rounded-full border-2"
-                  animate={{ 
+                  animate={{
                     borderColor: badgeFlicker2 ? 'rgba(0, 122, 83, 1)' : 'rgba(0, 122, 83, 0.7)',
-                    boxShadow: badgeFlicker2 
-                      ? '0 0 25px rgba(0, 122, 83, 0.9), inset 0 0 25px rgba(0, 122, 83, 0.2)' 
-                      : '0 0 15px rgba(0, 122, 83, 0.5), inset 0 0 15px rgba(0, 122, 83, 0.1)'
+                    boxShadow: badgeFlicker2
+                      ? '0 0 25px rgba(0, 122, 83, 0.9), inset 0 0 25px rgba(0, 122, 83, 0.2)'
+                      : '0 0 15px rgba(0, 122, 83, 0.5), inset 0 0 15px rgba(0, 122, 83, 0.1)',
                   }}
                   transition={{ duration: 0.3 }}
                 />
                 <Terminal className="absolute -top-1 -right-1 w-3 h-3 text-[#007A53]/70 opacity-70" />
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="relative flex items-center gap-1 sm:gap-2 px-4 sm:px-7 py-2 sm:py-3 rounded-full border-2 border-[#DA291C]/70 bg-black/20 backdrop-blur-lg"
                 whileHover={{ scale: 1.05, y: -2 }}
                 transition={{ type: "spring", stiffness: 400 }}
@@ -502,11 +629,11 @@ const Hero = () => {
                 <span className="text-gray-100 font-semibold">Creative Technologist</span>
                 <motion.div
                   className="absolute inset-0 rounded-full border-2"
-                  animate={{ 
+                  animate={{
                     borderColor: badgeFlicker1 ? 'rgba(218, 41, 28, 1)' : 'rgba(218, 41, 28, 0.7)',
-                    boxShadow: badgeFlicker1 
-                      ? '0 0 25px rgba(218, 41, 28, 0.9), inset 0 0 25px rgba(218, 41, 28, 0.2)' 
-                      : '0 0 15px rgba(218, 41, 28, 0.5), inset 0 0 15px rgba(218, 41, 28, 0.1)'
+                    boxShadow: badgeFlicker1
+                      ? '0 0 25px rgba(218, 41, 28, 0.9), inset 0 0 25px rgba(218, 41, 28, 0.2)'
+                      : '0 0 15px rgba(218, 41, 28, 0.5), inset 0 0 15px rgba(218, 41, 28, 0.1)',
                   }}
                   transition={{ duration: 0.3 }}
                 />
@@ -514,12 +641,6 @@ const Hero = () => {
               </motion.div>
             </motion.div>
           </div>
-        </motion.div>
-
-        <motion.div
-          className="mt-8 sm:mt-12 md:mt-16"
-        >
-          {/* Enhanced Professional Badges removed from here - moved above */}
         </motion.div>
 
         <div className="flex-1" />
@@ -539,33 +660,33 @@ const Hero = () => {
             <motion.img
               src={src}
               alt={`${skill} icon`}
-              className="w-11 h-11 opacity-0 filter drop-shadow-lg"
+              className="w-11 h-11 filter drop-shadow-lg"
               animate={{
                 x: [0, window.innerWidth + 100, 0],
                 opacity: [0, 0.8, 0.6, 0.8, 0],
                 scale: [0.8, 1.1, 1, 1.1, 0.8],
-                rotate: [0, 360]
+                rotate: [0, 360],
               }}
               transition={{
                 duration: 12 + i * 0.8,
                 repeat: Infinity,
                 repeatType: "reverse",
                 ease: "easeInOut",
-                delay: i * 0.5
+                delay: i * 0.5,
               }}
             />
-            
+
             {/* Skill icon glow effect */}
             <motion.div
               className="absolute inset-0 rounded-full bg-white/10"
               animate={{
                 scale: [1, 1.5, 1],
-                opacity: [0, 0.3, 0]
+                opacity: [0, 0.3, 0],
               }}
               transition={{
                 duration: 2,
                 repeat: Infinity,
-                delay: i * 0.3
+                delay: i * 0.3,
               }}
             />
           </motion.div>
@@ -577,32 +698,32 @@ const Hero = () => {
         <div key={effect.id}>
           <motion.div
             className={`absolute rounded-full ${
-              effect.type === 'electric' 
-                ? 'bg-cyan-400/60 shadow-lg shadow-cyan-400/50' 
+              effect.type === 'electric'
+                ? 'bg-cyan-400/60 shadow-lg shadow-cyan-400/50'
                 : 'bg-orange-400/60 shadow-lg shadow-orange-400/50'
             }`}
             style={{ left: effect.x - 20, top: effect.y - 20, width: 40, height: 40 }}
-            animate={{ 
-              scale: [1, 3, 0], 
+            animate={{
+              scale: [1, 3, 0],
               opacity: [1, 0.7, 0],
-              rotate: [0, 180]
+              rotate: [0, 180],
             }}
             transition={{ duration: 1.2, ease: "easeOut" }}
           />
-          
+
           {/* Ripple effect */}
           <motion.div
             className="absolute border-2 border-white/30 rounded-full"
             style={{ left: effect.x - 10, top: effect.y - 10, width: 20, height: 20 }}
-            animate={{ 
-              scale: [1, 8], 
-              opacity: [0.8, 0]
+            animate={{
+              scale: [1, 8],
+              opacity: [0.8, 0],
             }}
             transition={{ duration: 1.5, ease: "easeOut" }}
           />
         </div>
       ))}
-    </section>
+    </motion.section>
   );
 };
 

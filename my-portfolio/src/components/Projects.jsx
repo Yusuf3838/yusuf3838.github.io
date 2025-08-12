@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 const ProjectCard = React.memo(({ project, index }) => {
   const [cardFlicker, setCardFlicker] = useState(false);
 
-  // Memoize color configurations to avoid recalculation
   const colorConfig = useMemo(() => {
     const glowColors = [
       'from-orange-400/30 via-yellow-300/40 to-orange-400/30',
@@ -13,7 +12,6 @@ const ProjectCard = React.memo(({ project, index }) => {
       'from-pink-400/30 via-purple-300/40 to-pink-400/30',
       'from-yellow-400/30 via-orange-300/40 to-yellow-400/30'
     ];
-
     const borderColors = [
       'border-orange-400/60',
       'border-green-400/60',
@@ -21,7 +19,6 @@ const ProjectCard = React.memo(({ project, index }) => {
       'border-pink-400/60',
       'border-yellow-400/60'
     ];
-
     const linkColors = [
       'text-orange-400 hover:text-yellow-400',
       'text-green-400 hover:text-lime-400',
@@ -29,7 +26,6 @@ const ProjectCard = React.memo(({ project, index }) => {
       'text-pink-400 hover:text-purple-400',
       'text-yellow-400 hover:text-orange-400'
     ];
-
     const colorIndex = index % 5;
     return {
       glow: glowColors[colorIndex],
@@ -38,20 +34,16 @@ const ProjectCard = React.memo(({ project, index }) => {
     };
   }, [index]);
 
-  // Optimized flicker effect with better cleanup
   useEffect(() => {
     const flickerDelay = 4000 + Math.random() * 5000 + (index * 800);
-    
     const interval = setInterval(() => {
       setCardFlicker(true);
       const timeout = setTimeout(() => setCardFlicker(false), 150);
       return () => clearTimeout(timeout);
     }, flickerDelay);
-
     return () => clearInterval(interval);
   }, [index]);
 
-  // Memoize motion variants
   const cardVariants = useMemo(() => ({
     initial: { opacity: 0, y: 30 },
     animate: { opacity: 1, y: 0 },
@@ -84,7 +76,7 @@ const ProjectCard = React.memo(({ project, index }) => {
               src="https://barosomaliapp.netlify.app/assets/app_logo-Dj3Mhh_1.png"
               alt="Baro App Logo"
               className="w-8 h-8 object-contain rounded-lg"
-              loading="lazy"
+              decoding="async"
               onError={handleImageError}
             />
           )}
@@ -94,7 +86,6 @@ const ProjectCard = React.memo(({ project, index }) => {
             {project.title}
           </h3>
         </div>
-
         {project.title === 'Baro' && (
           <div className="mb-4 text-center">
             <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/40">
@@ -102,9 +93,7 @@ const ProjectCard = React.memo(({ project, index }) => {
             </span>
           </div>
         )}
-
         <p className="text-gray-300 mb-6 leading-relaxed text-center">{project.description}</p>
-
         <div className="flex flex-wrap justify-center gap-2 mb-6">
           {project.tags.map((tag, i) => (
             <motion.div
@@ -119,14 +108,13 @@ const ProjectCard = React.memo(({ project, index }) => {
                 src={tag.logo}
                 alt={tag.name}
                 className="w-4 h-4 object-contain"
-                loading="lazy"
+                decoding="async"
                 onError={handleImageError}
               />
               <span>{tag.name}</span>
             </motion.div>
           ))}
         </div>
-
         <div className="text-center">
           <a
             href={project.link}
@@ -138,14 +126,11 @@ const ProjectCard = React.memo(({ project, index }) => {
             View Project →
           </a>
         </div>
-
         <div
           className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent transition-all duration-200 ${
             cardFlicker ? 'opacity-100' : 'opacity-0'
           }`}
-          style={{
-            animation: cardFlicker ? 'scan 0.5s ease-in-out' : 'none'
-          }}
+          style={{ animation: cardFlicker ? 'scan 0.5s ease-in-out' : 'none' }}
         />
       </div>
     </motion.div>
@@ -156,21 +141,9 @@ ProjectCard.displayName = 'ProjectCard';
 
 const Projects = () => {
   const [sectionFlicker, setSectionFlicker] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [loadedImages, setLoadedImages] = useState(new Set());
 
-  // Optimized section flicker with better interval management
-  useEffect(() => {
-    const flickerDelay = 4000 + Math.random() * 6000;
-    
-    const interval = setInterval(() => {
-      setSectionFlicker(true);
-      const timeout = setTimeout(() => setSectionFlicker(false), 200);
-      return () => clearTimeout(timeout);
-    }, flickerDelay);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Memoize projects data to prevent recreation on each render
   const projects = useMemo(() => [
     {
       title: 'Baro',
@@ -204,6 +177,19 @@ const Projects = () => {
       link: 'https://github.com/Yusuf3838/bike-sharing-prediction-pycare',
     },
     {
+      title: 'Mood Capsule',
+      description: 'AI-powered app that transforms user moods into personalized experiences with custom images, soundtracks, and recommendations.',
+      tags: [
+        { name: 'React', logo: '/react.png' },
+        { name: 'TypeScript', logo: '/typescript.png' },
+        { name: 'Node.js', logo: '/nodejs.png' },
+        { name: 'Express.js', logo: '/express.png' },
+        { name: 'Hugging Face', logo: '/huggingface.png' },
+        { name: 'AI Horde', logo: '/aihorde.png' },
+      ],
+      link: 'https://github.com/Yusuf3838/story-mood-crafter',
+    },
+    {
       title: 'Product Marketplace',
       description: 'Created an iOS product marketplace with a serverless backend using AWS Amplify.',
       tags: [
@@ -225,7 +211,47 @@ const Projects = () => {
     }
   ], []);
 
-  // Memoize background styles
+  const criticalImages = useMemo(() => [
+    'https://barosomaliapp.netlify.app/assets/app_logo-Dj3Mhh_1.png',
+    ...projects.flatMap(project => project.tags.map(tag => tag.logo))
+  ], [projects]);
+
+  useEffect(() => {
+    const preloadImages = async () => {
+      const imagePromises = criticalImages.map((src) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.src = src;
+          img.onload = () => {
+            setLoadedImages((prev) => new Set([...prev, src]));
+            resolve(src);
+          };
+          img.onerror = () => {
+            console.warn(`Failed to load image: ${src}`);
+            resolve(src);
+          };
+          img.decode().catch(() => {});
+        });
+      });
+
+      await Promise.all(imagePromises);
+      setImagesLoaded(true);
+    };
+
+    preloadImages();
+  }, [criticalImages]);
+
+  useEffect(() => {
+    if (!imagesLoaded) return;
+    const flickerDelay = 4000 + Math.random() * 6000;
+    const interval = setInterval(() => {
+      setSectionFlicker(true);
+      const timeout = setTimeout(() => setSectionFlicker(false), 200);
+      return () => clearTimeout(timeout);
+    }, flickerDelay);
+    return () => clearInterval(interval);
+  }, [imagesLoaded]);
+
   const backgroundStyles = useMemo(() => ({
     grid: {
       backgroundImage: `
@@ -238,6 +264,35 @@ const Projects = () => {
       ? 'radial-gradient(ellipse 1000px 600px at 30% 40%, rgba(255,165,0,0.15) 0%, rgba(255,215,0,0.1) 30%, transparent 70%), radial-gradient(ellipse 800px 400px at 70% 60%, rgba(0,255,127,0.1) 0%, rgba(50,255,150,0.05) 40%, transparent 80%)'
       : 'radial-gradient(ellipse 800px 500px at 30% 40%, rgba(255,165,0,0.08) 0%, rgba(255,215,0,0.05) 30%, transparent 70%), radial-gradient(ellipse 600px 300px at 70% 60%, rgba(0,255,127,0.06) 0%, rgba(50,255,150,0.03) 40%, transparent 80%)'
   }), [sectionFlicker]);
+
+  const LoadingScreen = () => (
+    <motion.div
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+    >
+      <div className="text-center">
+        <motion.div
+          className="w-16 h-16 border-4 border-orange-500/30 border-t-orange-500 rounded-full mx-auto mb-4"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.p
+          className="text-orange-500 font-mono text-lg"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          Loading Projects...
+        </motion.p>
+      </div>
+    </motion.div>
+  );
+
+  if (!imagesLoaded) {
+    return <LoadingScreen />;
+  }
 
   return (
     <section id="projects" className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen w-full overflow-hidden bg-black">
@@ -280,21 +335,18 @@ const Projects = () => {
             </h2>
           </div>
         </motion.div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
           {projects.map((project, index) => (
             <ProjectCard key={project.title} project={project} index={index} />
           ))}
         </div>
       </div>
-
       <style jsx>{`
         @keyframes scan {
           0% { transform: translateY(0); }
           50% { transform: translateY(300px); }
           100% { transform: translateY(0); }
-        }
-      `}</style>
+        `}</style>
     </section>
   );
 };

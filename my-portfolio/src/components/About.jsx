@@ -5,10 +5,8 @@ import { Code, Database, Wrench, Monitor, Sparkles } from 'lucide-react';
 const SkillCategory = React.memo(({ icon: Icon, title, skills, index }) => {
   const [cardFlicker, setCardFlicker] = useState(false);
   
-  // Memoize flicker interval to prevent recreation
   const flickerDelay = useMemo(() => Math.random() * 4000 + 3000 + (index * 500), [index]);
   
-  // Stable flicker effect
   useEffect(() => {
     const interval = setInterval(() => {
       setCardFlicker(true);
@@ -19,7 +17,6 @@ const SkillCategory = React.memo(({ icon: Icon, title, skills, index }) => {
     return () => clearInterval(interval);
   }, [flickerDelay]);
 
-  // Memoize color mappings to prevent recalculation
   const colors = useMemo(() => ({
     glow: {
       0: 'from-orange-400/30 via-yellow-300/40 to-orange-400/30',
@@ -45,49 +42,47 @@ const SkillCategory = React.memo(({ icon: Icon, title, skills, index }) => {
   }), []);
 
   const getSkillIcon = useCallback((skill) => {
-  const icons = {
-    'React': '/react.png',
-    'Node.js': '/nodejs.png',
-    'Angular': '/angular.png',
-    'JavaScript': '/javascript.png',
-    'Python': '/python.png',
-    'Docker': '/docker.png',
-    'Git': '/git.png',
-    'Flutter': '/flutter.svg',
-    'MongoDB': '/mongo.png',
-    'PostgreSQL': '/postgre.png',
-    'MySQL': '/mysql.png',
-    'VS Code': '/vscode.png',
-    'Swift': '/swift.png',
-    'Kotlin': '/Kotlin.png',
-    'Java': '/java.svg',
-    'C++': '/c++.png',
-    'C#': '/csharp.png',
-    'AWS': '/aws.png',
-    'Google Firestore': '/firestore.png',
-    'Linux': '/linux.png',
-    'Windows': '/windows.png',
-    'macOS': '/macos.png',
-    'Pandas': '/pandas.png',
-    'NumPy': '/numpy.svg',
-    'CI/CD': '/cicd.png',
-    'Postman': '/postman.png',
-    'VM Ware': '/vmware.png',
-    'UNIX': '/unix.svg',
-  };
-
-  return icons[skill] || '/default-tech.svg';
-}, []);
+    const icons = {
+      'React': '/react.png',
+      'Node.js': '/nodejs.png',
+      'Angular': '/angular.png',
+      'JavaScript': '/javascript.png',
+      'Python': '/python.png',
+      'Docker': '/docker.png',
+      'Git': '/git.png',
+      'Flutter': '/flutter.svg',
+      'MongoDB': '/mongo.png',
+      'PostgreSQL': '/postgre.png',
+      'MySQL': '/mysql.png',
+      'VS Code': '/vscode.png',
+      'Swift': '/swift.png',
+      'Kotlin': '/Kotlin.png',
+      'Java': '/java.svg',
+      'C++': '/c++.png',
+      'C#': '/csharp.png',
+      'AWS': '/aws.png',
+      'Google Firestore': '/firestore.png',
+      'Linux': '/linux.png',
+      'Windows': '/windows.png',
+      'macOS': '/macos.png',
+      'Pandas': '/pandas.png',
+      'NumPy': '/numpy.svg',
+      'CI/CD': '/cicd.png',
+      'Postman': '/postman.png',
+      'VM Ware': '/vmware.png',
+      'UNIX': '/unix.svg',
+    };
+    return icons[skill] || '/default-tech.svg';
+  }, []);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
-      transition={{ delay: index * 0.05, duration: 0.6 }}
+      transition={{ delay: index * 0.1, duration: 0.6 }}
       className="relative group"
     >
-      {/* Outer glow that flickers */}
       <div 
         className={`absolute -inset-4 rounded-2xl blur-xl transition-all duration-200 ${
           cardFlicker 
@@ -96,7 +91,6 @@ const SkillCategory = React.memo(({ icon: Icon, title, skills, index }) => {
         }`} 
       />
       
-      {/* Card container */}
       <div className={`relative bg-black/80 backdrop-blur-sm border ${colors.border[index]} rounded-xl p-6 hover:bg-black/90 transition-all duration-300 group-hover:scale-105`}>
         <div className="flex items-center gap-3 mb-4">
           <div className={`p-2 rounded-lg bg-black/60 backdrop-blur-sm border ${colors.border[index]}`}>
@@ -115,22 +109,19 @@ const SkillCategory = React.memo(({ icon: Icon, title, skills, index }) => {
               initial={{ opacity: 0, scale: 0.8 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{ delay: (index * 0.05) + (skillIndex * 0.02) + 0.2 }}
+              transition={{ delay: (index * 0.1) + (skillIndex * 0.03) + 0.2 }}
               className={`flex items-center gap-2 px-3 py-1 text-sm rounded-full bg-black/60 text-gray-300 border ${colors.border[index]} hover:${colors.border[index]}/80 transition-colors duration-300`}
             >
               <img 
                 src={getSkillIcon(skill)} 
                 alt={skill}
                 className="w-4 h-4 object-contain"
-                loading="lazy"
                 decoding="async"
               />
               {skill}
             </motion.span>
           ))}
         </div>
-
-        {/* Scan line effect */}
         {cardFlicker && (
           <div 
             className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
@@ -143,13 +134,12 @@ const SkillCategory = React.memo(({ icon: Icon, title, skills, index }) => {
 
 SkillCategory.displayName = 'SkillCategory';
 
-// Memoized floating particle component
 const FloatingParticle = React.memo(({ className, duration, delay, yRange }) => (
   <motion.div 
     className={`absolute w-1 h-1 rounded-full ${className}`}
     animate={{ 
-      opacity: [0, 1, 0], 
-      scale: [0, 1.5, 0],
+      opacity: [0, 0.8, 0], 
+      scale: [0, 1.2, 0],
       y: [0, -yRange/2, -yRange]
     }}
     transition={{ duration, repeat: Infinity, repeatDelay: delay }}
@@ -162,43 +152,9 @@ function About() {
   const [sectionFlicker, setSectionFlicker] = useState(false);
   const [aboutFlicker, setAboutFlicker] = useState(false);
   const [passionFlicker, setPassionFlicker] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [loadedImages, setLoadedImages] = useState(new Set());
 
-  // Memoize random delays to prevent recalculation
-  const delays = useMemo(() => ({
-    section: Math.random() * 6000 + 4000,
-    about: Math.random() * 8000 + 5000,
-    passion: Math.random() * 7000 + 4500
-  }), []);
-
-  // Optimized flicker effects with proper cleanup
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSectionFlicker(true);
-      setTimeout(() => setSectionFlicker(false), 200);
-    }, delays.section);
-
-    return () => clearInterval(interval);
-  }, [delays.section]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAboutFlicker(true);
-      setTimeout(() => setAboutFlicker(false), 150);
-    }, delays.about);
-
-    return () => clearInterval(interval);
-  }, [delays.about]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPassionFlicker(true);
-      setTimeout(() => setPassionFlicker(false), 150);
-    }, delays.passion);
-
-    return () => clearInterval(interval);
-  }, [delays.passion]);
-
-  // Memoize skills data to prevent recreation
   const skills = useMemo(() => ({
     languages: ['Swift', 'Kotlin', 'C++', 'C#', 'Java', 'JavaScript', 'Python'],
     frameworks: ['React', 'Node.js', 'Pandas', 'NumPy', 'Angular', 'Flutter'],
@@ -207,19 +163,135 @@ function About() {
     systems: ['Windows', 'UNIX', 'Linux', 'macOS']
   }), []);
 
-  // Memoize particle configurations
+  const criticalImages = useMemo(() => {
+    const icons = {
+      'React': '/react.png',
+      'Node.js': '/nodejs.png',
+      'Angular': '/angular.png',
+      'JavaScript': '/javascript.png',
+      'Python': '/python.png',
+      'Docker': '/docker.png',
+      'Git': '/git.png',
+      'Flutter': '/flutter.svg',
+      'MongoDB': '/mongo.png',
+      'PostgreSQL': '/postgre.png',
+      'MySQL': '/mysql.png',
+      'VS Code': '/vscode.png',
+      'Swift': '/swift.png',
+      'Kotlin': '/Kotlin.png',
+      'Java': '/java.svg',
+      'C++': '/c++.png',
+      'C#': '/csharp.png',
+      'AWS': '/aws.png',
+      'Google Firestore': '/firestore.png',
+      'Linux': '/linux.png',
+      'Windows': '/windows.png',
+      'macOS': '/macos.png',
+      'Pandas': '/pandas.png',
+      'NumPy': '/numpy.svg',
+      'CI/CD': '/cicd.png',
+      'Postman': '/postman.png',
+      'VM Ware': '/vmware.png',
+      'UNIX': '/unix.svg',
+    };
+    return Object.values(skills).flat().map(skill => icons[skill] || '/default-tech.svg');
+  }, [skills]);
+
+  useEffect(() => {
+    const preloadImages = async () => {
+      const imagePromises = criticalImages.map((src) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.src = src;
+          img.onload = () => {
+            setLoadedImages((prev) => new Set([...prev, src]));
+            resolve(src);
+          };
+          img.onerror = () => {
+            console.warn(`Failed to load image: ${src}`);
+            resolve(src);
+          };
+          img.decode().catch(() => {});
+        });
+      });
+
+      await Promise.all(imagePromises);
+      setImagesLoaded(true);
+    };
+
+    preloadImages();
+  }, [criticalImages]);
+
+  const delays = useMemo(() => ({
+    section: Math.random() * 6000 + 4000,
+    about: Math.random() * 8000 + 5000,
+    passion: Math.random() * 7000 + 4500
+  }), []);
+
+  useEffect(() => {
+    if (!imagesLoaded) return;
+    const interval = setInterval(() => {
+      setSectionFlicker(true);
+      setTimeout(() => setSectionFlicker(false), 200);
+    }, delays.section);
+    return () => clearInterval(interval);
+  }, [delays.section, imagesLoaded]);
+
+  useEffect(() => {
+    if (!imagesLoaded) return;
+    const interval = setInterval(() => {
+      setAboutFlicker(true);
+      setTimeout(() => setAboutFlicker(false), 150);
+    }, delays.about);
+    return () => clearInterval(interval);
+  }, [delays.about, imagesLoaded]);
+
+  useEffect(() => {
+    if (!imagesLoaded) return;
+    const interval = setInterval(() => {
+      setPassionFlicker(true);
+      setTimeout(() => setPassionFlicker(false), 150);
+    }, delays.passion);
+    return () => clearInterval(interval);
+  }, [delays.passion, imagesLoaded]);
+
   const particles = useMemo(() => [
     { className: "top-1/4 left-1/5 bg-orange-300", duration: 5, delay: 4, yRange: 60 },
     { className: "top-3/4 right-1/4 bg-green-300", duration: 4.5, delay: 2.5, yRange: 50 },
     { className: "top-1/2 right-1/3 bg-yellow-300", duration: 6, delay: 1.5, yRange: 40 },
-    { className: "bottom-1/4 left-1/3 bg-orange-400", duration: 5.5, delay: 3, yRange: 70 },
-    { className: "top-1/2 left-1/6 bg-green-400", duration: 4.2, delay: 2, yRange: 50 },
-    { className: "bottom-1/3 right-1/5 bg-yellow-400", duration: 6.5, delay: 3.5, yRange: 60 }
   ], []);
+
+  const LoadingScreen = () => (
+    <motion.div
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+    >
+      <div className="text-center">
+        <motion.div
+          className="w-16 h-16 border-4 border-orange-500/30 border-t-orange-500 rounded-full mx-auto mb-4"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.p
+          className="text-orange-500 font-mono text-lg"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          Loading About Section...
+        </motion.p>
+      </div>
+    </motion.div>
+  );
+
+  if (!imagesLoaded) {
+    return <LoadingScreen />;
+  }
 
   return (
     <section id="about" className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen w-full overflow-hidden bg-black">
-      {/* Street-like background with subtle texture - optimized */}
       <div 
         className={`absolute inset-0 transition-opacity duration-200 ${
           sectionFlicker ? 'opacity-40' : 'opacity-20'
@@ -233,8 +305,6 @@ function About() {
           willChange: 'opacity'
         }}
       />
-
-      {/* Ambient lighting gradients - simplified */}
       <div 
         className={`absolute inset-0 transition-opacity duration-200 ${
           sectionFlicker ? 'opacity-100' : 'opacity-70'
@@ -244,13 +314,10 @@ function About() {
           willChange: 'opacity'
         }}
       />
-
-      {/* Dark vignette */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 z-10" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40 z-10" />
 
       <div className="relative z-20">
-        {/* About Me Section */}
         <motion.div
           initial={{ opacity: 0, y: -30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -259,7 +326,6 @@ function About() {
           className="text-center mb-16"
         >
           <div className="relative inline-block mb-6">
-            {/* Title glow */}
             <div 
               className={`absolute -inset-6 rounded-2xl blur-2xl transition-all duration-200 ${
                 sectionFlicker 
@@ -267,7 +333,6 @@ function About() {
                   : 'bg-gradient-to-r from-orange-400/20 via-green-300/30 to-orange-400/20 opacity-80'
               }`} 
             />
-            
             <h2 className={`relative text-4xl font-bold transition-transform duration-200 ${
               sectionFlicker ? 'scale-105' : ''
             }`}>
@@ -276,9 +341,7 @@ function About() {
               </span>
             </h2>
           </div>
-          
           <div className="relative max-w-3xl mx-auto">
-            {/* About text glow */}
             <div 
               className={`absolute -inset-4 rounded-2xl blur-xl transition-all duration-200 ${
                 aboutFlicker 
@@ -286,7 +349,6 @@ function About() {
                   : 'bg-gradient-to-r from-orange-400/15 via-green-300/20 to-orange-400/15 opacity-60'
               }`} 
             />
-            
             <div className={`relative bg-black/80 backdrop-blur-sm border border-orange-400/60 rounded-lg p-6 transition-all duration-300 hover:bg-black/90 ${
               aboutFlicker ? 'scale-105' : ''
             }`}>
@@ -295,16 +357,12 @@ function About() {
                 With a strong foundation in cutting-edge web and mobile technologies,
                 I thrive on solving complex problems and delivering solutions that make a meaningful impact.
               </p>
-              
-              {/* Scan line effect */}
               {aboutFlicker && (
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
               )}
             </div>
           </div>
         </motion.div>
-
-        {/* Skills Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 max-w-7xl mx-auto">
           <SkillCategory icon={Code} title="Languages" skills={skills.languages} index={0} />
           <SkillCategory icon={Monitor} title="Frameworks & Libraries" skills={skills.frameworks} index={1} />
@@ -312,8 +370,6 @@ function About() {
           <SkillCategory icon={Wrench} title="Tools" skills={skills.tools} index={3} />
           <SkillCategory icon={Monitor} title="Operating Systems" skills={skills.systems} index={4} />
         </div>
-
-        {/* Passion Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -331,9 +387,7 @@ function About() {
               </h3>
             </div>
           </div>
-          
           <div className="relative">
-            {/* Passion text glow */}
             <div 
               className={`absolute -inset-4 rounded-2xl blur-xl transition-all duration-200 ${
                 passionFlicker 
@@ -341,7 +395,6 @@ function About() {
                   : 'bg-gradient-to-r from-green-400/15 via-lime-300/20 to-green-400/15 opacity-60'
               }`} 
             />
-            
             <div className={`relative bg-black/80 backdrop-blur-sm border border-green-400/60 rounded-lg p-6 transition-all duration-300 hover:bg-black/90 ${
               passionFlicker ? 'scale-105' : ''
             }`}>
@@ -349,8 +402,6 @@ function About() {
                 I'm deeply committed to building intuitive, performance-driven applications that enhance user experiences. 
                 I continuously seek opportunities to learn, innovate, and stay ahead in the ever-evolving world of technology.
               </p>
-              
-              {/* Scan line effect */}
               {passionFlicker && (
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
               )}
@@ -358,8 +409,6 @@ function About() {
           </div>
         </motion.div>
       </div>
-
-      {/* Floating particles - optimized */}
       <div className="absolute inset-0 z-25 pointer-events-none">
         {particles.map((particle, index) => (
           <FloatingParticle key={index} {...particle} />
