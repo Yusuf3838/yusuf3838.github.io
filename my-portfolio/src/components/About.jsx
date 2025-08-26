@@ -1,45 +1,17 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Code, Database, Wrench, Monitor, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { Code, Database, Wrench, Monitor, Sparkles, Zap } from 'lucide-react';
 
-const SkillCategory = React.memo(({ icon: Icon, title, skills, index }) => {
-  const [cardFlicker, setCardFlicker] = useState(false);
+const SkillBubble = React.memo(({ skill, index, category, delay }) => {
+  const [isHovered, setIsHovered] = useState(false);
   
-  const flickerDelay = useMemo(() => Math.random() * 4000 + 3000 + (index * 500), [index]);
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCardFlicker(true);
-      const timeout = setTimeout(() => setCardFlicker(false), 150);
-      return () => clearTimeout(timeout);
-    }, flickerDelay);
-
-    return () => clearInterval(interval);
-  }, [flickerDelay]);
-
-  const colors = useMemo(() => ({
-    glow: {
-      0: 'from-orange-400/30 via-yellow-300/40 to-orange-400/30',
-      1: 'from-green-400/30 via-lime-300/40 to-green-400/30',
-      2: 'from-blue-400/30 via-cyan-300/40 to-blue-400/30',
-      3: 'from-pink-400/30 via-purple-300/40 to-pink-400/30',
-      4: 'from-yellow-400/30 via-orange-300/40 to-yellow-400/30'
-    },
-    border: {
-      0: 'border-orange-400/60',
-      1: 'border-green-400/60',
-      2: 'border-blue-400/60',
-      3: 'border-pink-400/60',
-      4: 'border-yellow-400/60'
-    },
-    icon: {
-      0: 'text-orange-400',
-      1: 'text-green-400',
-      2: 'text-blue-400',
-      3: 'text-pink-400',
-      4: 'text-yellow-400'
-    }
-  }), []);
+  const categoryColors = {
+    languages: 'from-orange-500 to-red-500',
+    frameworks: 'from-green-500 to-emerald-500', 
+    databases: 'from-blue-500 to-cyan-500',
+    tools: 'from-purple-500 to-pink-500',
+    systems: 'from-yellow-500 to-amber-500'
+  };
 
   const getSkillIcon = useCallback((skill) => {
     const icons = {
@@ -77,54 +49,45 @@ const SkillCategory = React.memo(({ icon: Icon, title, skills, index }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ delay: index * 0.1, duration: 0.6 }}
-      className="relative group"
+      initial={{ opacity: 0, scale: 0.3, y: 50 }}
+      whileInView={{ opacity: 1, scale: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ 
+        delay: delay + (index * 0.05), 
+        duration: 0.4,
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }}
+      whileHover={{ scale: 1.1, y: -5 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="relative group cursor-pointer"
     >
-      <div 
-        className={`absolute -inset-4 rounded-2xl blur-xl transition-all duration-200 ${
-          cardFlicker 
-            ? `bg-gradient-to-r ${colors.glow[index]} opacity-100 scale-105` 
-            : `bg-gradient-to-r ${colors.glow[index]} opacity-60`
-        }`} 
-      />
-      
-      <div className={`relative bg-black/80 backdrop-blur-sm border ${colors.border[index]} rounded-xl p-6 hover:bg-black/90 transition-all duration-300 group-hover:scale-105`}>
-        <div className="flex items-center gap-3 mb-4">
-          <div className={`p-2 rounded-lg bg-black/60 backdrop-blur-sm border ${colors.border[index]}`}>
-            <Icon className={`w-5 h-5 ${colors.icon[index]}`} />
-          </div>
-          <h3 className={`text-xl font-semibold ${colors.icon[index]}`} style={{
-            textShadow: `0 0 10px currentColor`
-          }}>
-            {title}
-          </h3>
+      <div className={`
+        relative px-4 py-2 rounded-full border border-white/20
+        bg-gradient-to-r ${categoryColors[category]}
+        shadow-lg transition-all duration-300
+        ${isHovered ? 'shadow-2xl' : ''}
+      `}>
+        <div className="flex items-center gap-2">
+          <img 
+            src={getSkillIcon(skill)} 
+            alt={skill}
+            className="w-4 h-4 object-contain"
+          />
+          <span className="text-white font-medium text-sm">{skill}</span>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {skills.map((skill, skillIndex) => (
-            <motion.span
-              key={`${skill}-${skillIndex}`}
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ delay: (index * 0.1) + (skillIndex * 0.03) + 0.2 }}
-              className={`flex items-center gap-2 px-3 py-1 text-sm rounded-full bg-black/60 text-gray-300 border ${colors.border[index]} hover:${colors.border[index]}/80 transition-colors duration-300`}
-            >
-              <img 
-                src={getSkillIcon(skill)} 
-                alt={skill}
-                className="w-4 h-4 object-contain"
-                decoding="async"
-              />
-              {skill}
-            </motion.span>
-          ))}
-        </div>
-        {cardFlicker && (
-          <div 
-            className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
+        
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className={`
+              absolute -inset-1 rounded-full blur-sm -z-10
+              bg-gradient-to-r ${categoryColors[category]} opacity-75
+            `}
           />
         )}
       </div>
@@ -132,28 +95,79 @@ const SkillCategory = React.memo(({ icon: Icon, title, skills, index }) => {
   );
 });
 
-SkillCategory.displayName = 'SkillCategory';
+const SkillCategory = React.memo(({ icon: Icon, title, skills, category, index }) => {
+  const categoryColors = {
+    languages: { main: 'text-orange-400', gradient: 'from-orange-400/20 to-red-400/20' },
+    frameworks: { main: 'text-green-400', gradient: 'from-green-400/20 to-emerald-400/20' },
+    databases: { main: 'text-blue-400', gradient: 'from-blue-400/20 to-cyan-400/20' },
+    tools: { main: 'text-purple-400', gradient: 'from-purple-400/20 to-pink-400/20' },
+    systems: { main: 'text-yellow-400', gradient: 'from-yellow-400/20 to-amber-400/20' }
+  };
 
-const FloatingParticle = React.memo(({ className, duration, delay, yRange }) => (
-  <motion.div 
-    className={`absolute w-1 h-1 rounded-full ${className}`}
-    animate={{ 
-      opacity: [0, 0.8, 0], 
-      scale: [0, 1.2, 0],
-      y: [0, -yRange/2, -yRange]
-    }}
-    transition={{ duration, repeat: Infinity, repeatDelay: delay }}
-  />
-));
+  const colors = categoryColors[category];
 
-FloatingParticle.displayName = 'FloatingParticle';
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -50 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ delay: index * 0.15, duration: 0.6 }}
+      className="mb-8"
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`p-2 rounded-lg bg-gradient-to-r ${colors.gradient} backdrop-blur-sm`}>
+          <Icon className={`w-5 h-5 ${colors.main}`} />
+        </div>
+        <h3 className={`text-lg font-semibold ${colors.main}`}>
+          {title}
+        </h3>
+      </div>
+      
+      <div className="flex flex-wrap gap-3">
+        {skills.map((skill, skillIndex) => (
+          <SkillBubble
+            key={skill}
+            skill={skill}
+            index={skillIndex}
+            category={category}
+            delay={index * 0.1}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+});
+
+const FloatingOrb = React.memo(({ className, size = "w-2 h-2", initialX, initialY }) => {
+  return (
+    <motion.div
+      className={`absolute rounded-full ${className} ${size} blur-sm`}
+      style={{ left: initialX, top: initialY }}
+      animate={{
+        x: [0, 30, -20, 0],
+        y: [0, -40, 20, 0],
+        opacity: [0.3, 0.8, 0.4, 0.3],
+        scale: [1, 1.2, 0.8, 1]
+      }}
+      transition={{
+        duration: Math.random() * 10 + 15,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+    />
+  );
+});
 
 function About() {
-  const [sectionFlicker, setSectionFlicker] = useState(false);
-  const [aboutFlicker, setAboutFlicker] = useState(false);
-  const [passionFlicker, setPassionFlicker] = useState(false);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-  const [loadedImages, setLoadedImages] = useState(new Set());
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+  
+  const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+  const smoothY = useSpring(y, { stiffness: 100, damping: 30 });
 
   const skills = useMemo(() => ({
     languages: ['Swift', 'Kotlin', 'C++', 'C#', 'Java', 'JavaScript', 'Python'],
@@ -163,257 +177,188 @@ function About() {
     systems: ['Windows', 'UNIX', 'Linux', 'macOS']
   }), []);
 
-  const criticalImages = useMemo(() => {
-    const icons = {
-      'React': '/react.png',
-      'Node.js': '/nodejs.png',
-      'Angular': '/angular.png',
-      'JavaScript': '/javascript.png',
-      'Python': '/python.png',
-      'Docker': '/docker.png',
-      'Git': '/git.png',
-      'Flutter': '/flutter.svg',
-      'MongoDB': '/mongo.png',
-      'PostgreSQL': '/postgre.png',
-      'MySQL': '/mysql.png',
-      'VS Code': '/vscode.png',
-      'Swift': '/swift.png',
-      'Kotlin': '/Kotlin.png',
-      'Java': '/java.svg',
-      'C++': '/c++.png',
-      'C#': '/csharp.png',
-      'AWS': '/aws.png',
-      'Google Firestore': '/firestore.png',
-      'Linux': '/linux.png',
-      'Windows': '/windows.png',
-      'macOS': '/macos.png',
-      'Pandas': '/pandas.png',
-      'NumPy': '/numpy.svg',
-      'CI/CD': '/cicd.png',
-      'Postman': '/postman.png',
-      'VM Ware': '/vmware.png',
-      'UNIX': '/unix.svg',
-    };
-    return Object.values(skills).flat().map(skill => icons[skill] || '/default-tech.svg');
-  }, [skills]);
-
-  useEffect(() => {
-    const preloadImages = async () => {
-      const imagePromises = criticalImages.map((src) => {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.src = src;
-          img.onload = () => {
-            setLoadedImages((prev) => new Set([...prev, src]));
-            resolve(src);
-          };
-          img.onerror = () => {
-            console.warn(`Failed to load image: ${src}`);
-            resolve(src);
-          };
-          img.decode().catch(() => {});
-        });
-      });
-
-      await Promise.all(imagePromises);
-      setImagesLoaded(true);
-    };
-
-    preloadImages();
-  }, [criticalImages]);
-
-  const delays = useMemo(() => ({
-    section: Math.random() * 6000 + 4000,
-    about: Math.random() * 8000 + 5000,
-    passion: Math.random() * 7000 + 4500
-  }), []);
-
-  useEffect(() => {
-    if (!imagesLoaded) return;
-    const interval = setInterval(() => {
-      setSectionFlicker(true);
-      setTimeout(() => setSectionFlicker(false), 200);
-    }, delays.section);
-    return () => clearInterval(interval);
-  }, [delays.section, imagesLoaded]);
-
-  useEffect(() => {
-    if (!imagesLoaded) return;
-    const interval = setInterval(() => {
-      setAboutFlicker(true);
-      setTimeout(() => setAboutFlicker(false), 150);
-    }, delays.about);
-    return () => clearInterval(interval);
-  }, [delays.about, imagesLoaded]);
-
-  useEffect(() => {
-    if (!imagesLoaded) return;
-    const interval = setInterval(() => {
-      setPassionFlicker(true);
-      setTimeout(() => setPassionFlicker(false), 150);
-    }, delays.passion);
-    return () => clearInterval(interval);
-  }, [delays.passion, imagesLoaded]);
-
-  const particles = useMemo(() => [
-    { className: "top-1/4 left-1/5 bg-orange-300", duration: 5, delay: 4, yRange: 60 },
-    { className: "top-3/4 right-1/4 bg-green-300", duration: 4.5, delay: 2.5, yRange: 50 },
-    { className: "top-1/2 right-1/3 bg-yellow-300", duration: 6, delay: 1.5, yRange: 40 },
-  ], []);
-
-  const LoadingScreen = () => (
-    <motion.div
-      initial={{ opacity: 1 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
-    >
-      <div className="text-center">
-        <motion.div
-          className="w-16 h-16 border-4 border-orange-500/30 border-t-orange-500 rounded-full mx-auto mb-4"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        />
-        <motion.p
-          className="text-orange-500 font-mono text-lg"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        >
-          Loading About Section...
-        </motion.p>
-      </div>
-    </motion.div>
-  );
-
-  if (!imagesLoaded) {
-    return <LoadingScreen />;
-  }
+  const orbs = useMemo(() => 
+    Array.from({ length: 8 }, (_, i) => ({
+      id: i,
+      className: [
+        'bg-orange-400/30',
+        'bg-green-400/30', 
+        'bg-blue-400/30',
+        'bg-purple-400/30',
+        'bg-yellow-400/30',
+        'bg-pink-400/30',
+        'bg-cyan-400/30',
+        'bg-red-400/30'
+      ][i % 8],
+      size: Math.random() > 0.5 ? 'w-1 h-1' : 'w-2 h-2',
+      initialX: `${Math.random() * 100}%`,
+      initialY: `${Math.random() * 100}%`
+    }))
+  , []);
 
   return (
-    <section id="about" className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen w-full overflow-hidden bg-black">
-      <div 
-        className={`absolute inset-0 transition-opacity duration-200 ${
-          sectionFlicker ? 'opacity-40' : 'opacity-20'
-        }`}
-        style={{
-          backgroundImage: `
-            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
-            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px',
-          willChange: 'opacity'
-        }}
-      />
-      <div 
-        className={`absolute inset-0 transition-opacity duration-200 ${
-          sectionFlicker ? 'opacity-100' : 'opacity-70'
-        }`}
-        style={{
-          background: 'radial-gradient(ellipse 800px 500px at 30% 40%, rgba(255,165,0,0.08) 0%, transparent 70%), radial-gradient(ellipse 600px 300px at 70% 60%, rgba(0,255,127,0.06) 0%, transparent 80%)',
-          willChange: 'opacity'
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 z-10" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40 z-10" />
+    <section 
+      ref={containerRef}
+      id="about" 
+      className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)'
+      }}
+    >
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 25% 25%, rgba(255,165,0,0.1) 0%, transparent 50%),
+              radial-gradient(circle at 75% 75%, rgba(34,197,94,0.08) 0%, transparent 50%),
+              radial-gradient(circle at 50% 50%, rgba(59,130,246,0.06) 0%, transparent 50%)
+            `
+          }}
+        />
+        
+        {/* Floating Orbs */}
+        {orbs.map((orb) => (
+          <FloatingOrb key={orb.id} {...orb} />
+        ))}
+      </div>
 
-      <div className="relative z-20">
+      <motion.div 
+        style={{ y: smoothY, opacity }}
+        className="relative z-10 max-w-6xl mx-auto"
+      >
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <div className="relative inline-block mb-6">
-            <div 
-              className={`absolute -inset-6 rounded-2xl blur-2xl transition-all duration-200 ${
-                sectionFlicker 
-                  ? 'bg-gradient-to-r from-orange-400/40 via-green-300/50 to-orange-400/40 opacity-100 scale-105' 
-                  : 'bg-gradient-to-r from-orange-400/20 via-green-300/30 to-orange-400/20 opacity-80'
-              }`} 
+          <motion.h2 
+            className="text-5xl md:text-6xl font-bold mb-6 relative inline-block"
+            whileHover={{ scale: 1.05 }}
+          >
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-green-400 to-blue-400">
+              About Me
+            </span>
+            <motion.div
+              className="absolute -inset-4 bg-gradient-to-r from-orange-400/20 via-green-400/20 to-blue-400/20 rounded-2xl blur-xl"
+              animate={{ opacity: [0.5, 0.8, 0.5] }}
+              transition={{ duration: 3, repeat: Infinity }}
             />
-            <h2 className={`relative text-4xl font-bold transition-transform duration-200 ${
-              sectionFlicker ? 'scale-105' : ''
-            }`}>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-green-400">
-                About Me
-              </span>
-            </h2>
-          </div>
-          <div className="relative max-w-3xl mx-auto">
-            <div 
-              className={`absolute -inset-4 rounded-2xl blur-xl transition-all duration-200 ${
-                aboutFlicker 
-                  ? 'bg-gradient-to-r from-orange-400/30 via-green-300/40 to-orange-400/30 opacity-100 scale-105' 
-                  : 'bg-gradient-to-r from-orange-400/15 via-green-300/20 to-orange-400/15 opacity-60'
-              }`} 
-            />
-            <div className={`relative bg-black/80 backdrop-blur-sm border border-orange-400/60 rounded-lg p-6 transition-all duration-300 hover:bg-black/90 ${
-              aboutFlicker ? 'scale-105' : ''
-            }`}>
-              <p className="text-gray-300 leading-relaxed">
-                I'm a dedicated full-stack developer with a passion for crafting modern, scalable, and user-centric applications. 
-                With a strong foundation in cutting-edge web and mobile technologies,
-                I thrive on solving complex problems and delivering solutions that make a meaningful impact.
-              </p>
-              {aboutFlicker && (
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-              )}
-            </div>
-          </div>
+          </motion.h2>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 max-w-7xl mx-auto">
-          <SkillCategory icon={Code} title="Languages" skills={skills.languages} index={0} />
-          <SkillCategory icon={Monitor} title="Frameworks & Libraries" skills={skills.frameworks} index={1} />
-          <SkillCategory icon={Database} title="Databases" skills={skills.databases} index={2} />
-          <SkillCategory icon={Wrench} title="Tools" skills={skills.tools} index={3} />
-          <SkillCategory icon={Monitor} title="Operating Systems" skills={skills.systems} index={4} />
+
+        {/* Main Content */}
+        <div className="grid lg:grid-cols-2 gap-12 items-start">
+          {/* Left Side - Description */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="space-y-8"
+          >
+            {/* About Text */}
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-orange-500/10 to-green-500/10 rounded-2xl blur-xl" />
+              <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+                <p className="text-lg text-gray-300 leading-relaxed mb-6">
+                  I'm a passionate full stack developer with over 3 years of experience crafting 
+                  scalable web applications and mobile solutions. My journey in software development 
+                  began with a curiosity for problem solving and has evolved into a deep expertise 
+                  across multiple programming paradigms and technology stacks.
+                </p>
+                
+                <p className="text-lg text-gray-300 leading-relaxed mb-6">
+                  Specializing in modern JavaScript frameworks like React and Node.js, I've built 
+                  everything from responsive web applications to complex backend systems. My experience 
+                  spans across mobile development with Flutter and Swift, database architecture with 
+                  both SQL and NoSQL solutions, and cloud deployment strategies using AWS and containerization.
+                </p>
+                
+                <p className="text-lg text-gray-300 leading-relaxed mb-6">
+                  What sets me apart is my commitment to writing clean, maintainable code and my 
+                  passion for user experience. I believe that great software isn't just functional, it's 
+                  intuitive, performant, and accessible.
+                </p>
+                
+                <div className="flex items-center gap-3 text-green-400 mb-3">
+                  <Zap className="w-5 h-5" />
+                  <span className="font-semibold">What Drives Me</span>
+                </div>
+                
+                <p className="text-gray-300 leading-relaxed">
+                  I'm deeply motivated by the intersection of creativity and technology. Every line of 
+                  code I write is an opportunity to solve real world problems and create meaningful 
+                  impact. I thrive in collaborative environments where I can learn from others while 
+                  contributing my expertise in system architecture, performance optimization, and modern 
+                  development practices. My goal is always to deliver solutions that not only meet 
+                  requirements but exceed expectations in terms of performance, scalability, and user satisfaction.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right Side - Skills */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl blur-xl" />
+              <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <Sparkles className="w-6 h-6 text-blue-400" />
+                  <h3 className="text-2xl font-bold text-blue-400">Technical Skills</h3>
+                </div>
+                
+                <div className="space-y-6">
+                  <SkillCategory 
+                    icon={Code} 
+                    title="Languages" 
+                    skills={skills.languages} 
+                    category="languages"
+                    index={0}
+                  />
+                  <SkillCategory 
+                    icon={Monitor} 
+                    title="Frameworks & Libraries" 
+                    skills={skills.frameworks} 
+                    category="frameworks"
+                    index={1}
+                  />
+                  <SkillCategory 
+                    icon={Database} 
+                    title="Databases" 
+                    skills={skills.databases} 
+                    category="databases"
+                    index={2}
+                  />
+                  <SkillCategory 
+                    icon={Wrench} 
+                    title="Tools" 
+                    skills={skills.tools} 
+                    category="tools"
+                    index={3}
+                  />
+                  <SkillCategory 
+                    icon={Monitor} 
+                    title="Operating Systems" 
+                    skills={skills.systems} 
+                    category="systems"
+                    index={4}
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8 }}
-          className="relative max-w-3xl mx-auto"
-        >
-          <div className="text-center mb-6 relative">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-sm border border-green-400/60">
-              <Sparkles className="w-5 h-5 text-green-400" />
-              <h3 className="text-xl font-semibold text-green-400" style={{
-                textShadow: `0 0 10px currentColor`
-              }}>
-                What Drives Me
-              </h3>
-            </div>
-          </div>
-          <div className="relative">
-            <div 
-              className={`absolute -inset-4 rounded-2xl blur-xl transition-all duration-200 ${
-                passionFlicker 
-                  ? 'bg-gradient-to-r from-green-400/30 via-lime-300/40 to-green-400/30 opacity-100 scale-105' 
-                  : 'bg-gradient-to-r from-green-400/15 via-lime-300/20 to-green-400/15 opacity-60'
-              }`} 
-            />
-            <div className={`relative bg-black/80 backdrop-blur-sm border border-green-400/60 rounded-lg p-6 transition-all duration-300 hover:bg-black/90 ${
-              passionFlicker ? 'scale-105' : ''
-            }`}>
-              <p className="text-gray-300 leading-relaxed">
-                I'm deeply committed to building intuitive, performance-driven applications that enhance user experiences. 
-                I continuously seek opportunities to learn, innovate, and stay ahead in the ever-evolving world of technology.
-              </p>
-              {passionFlicker && (
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-              )}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-      <div className="absolute inset-0 z-25 pointer-events-none">
-        {particles.map((particle, index) => (
-          <FloatingParticle key={index} {...particle} />
-        ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

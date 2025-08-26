@@ -1,280 +1,328 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Brain, Code, Cloud, Palette } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { Brain, Code, Cloud, Palette, ChevronRight, Sparkles } from 'lucide-react';
 
 const SkillCard = React.memo(({ icon: Icon, title, points, index }) => {
-  const [cardFlicker, setCardFlicker] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   
-  // Memoize color configurations
   const colorConfig = useMemo(() => {
-    const glowColors = {
-      0: 'from-orange-400/30 via-yellow-300/40 to-orange-400/30',
-      1: 'from-green-400/30 via-lime-300/40 to-green-400/30',
-      2: 'from-blue-400/30 via-cyan-300/40 to-blue-400/30',
-      3: 'from-pink-400/30 via-purple-300/40 to-pink-400/30'
+    const configs = {
+      0: {
+        gradient: 'from-orange-500 to-red-500',
+        bgGradient: 'from-orange-500/10 to-red-500/10',
+        iconColor: 'text-orange-400',
+        borderColor: 'border-orange-400/30',
+        accentColor: 'text-orange-300'
+      },
+      1: {
+        gradient: 'from-green-500 to-emerald-500',
+        bgGradient: 'from-green-500/10 to-emerald-500/10',
+        iconColor: 'text-green-400',
+        borderColor: 'border-green-400/30',
+        accentColor: 'text-green-300'
+      },
+      2: {
+        gradient: 'from-blue-500 to-cyan-500',
+        bgGradient: 'from-blue-500/10 to-cyan-500/10',
+        iconColor: 'text-blue-400',
+        borderColor: 'border-blue-400/30',
+        accentColor: 'text-blue-300'
+      },
+      3: {
+        gradient: 'from-purple-500 to-pink-500',
+        bgGradient: 'from-purple-500/10 to-pink-500/10',
+        iconColor: 'text-purple-400',
+        borderColor: 'border-purple-400/30',
+        accentColor: 'text-purple-300'
+      }
     };
-
-    const borderColors = {
-      0: 'border-orange-400/60',
-      1: 'border-green-400/60', 
-      2: 'border-blue-400/60',
-      3: 'border-pink-400/60'
-    };
-
-    const iconColors = {
-      0: 'text-orange-400',
-      1: 'text-green-400',
-      2: 'text-blue-400', 
-      3: 'text-pink-400'
-    };
-
-    return {
-      glow: glowColors[index],
-      border: borderColors[index],
-      icon: iconColors[index]
-    };
+    return configs[index] || configs[0];
   }, [index]);
-
-  // Optimized flicker effect
-  useEffect(() => {
-    const flickerDelay = 3000 + Math.random() * 4000 + (index * 500);
-    
-    const interval = setInterval(() => {
-      setCardFlicker(true);
-      const timeout = setTimeout(() => setCardFlicker(false), 150);
-      return () => clearTimeout(timeout);
-    }, flickerDelay);
-
-    return () => clearInterval(interval);
-  }, [index]);
-
-  // Memoize animation variants
-  const cardVariants = useMemo(() => ({
-    initial: { opacity: 0, y: 30 },
-    animate: { opacity: 1, y: 0 },
-    transition: { delay: index * 0.2, duration: 0.8 }
-  }), [index]);
 
   return (
     <motion.div
-      initial={cardVariants.initial}
-      whileInView={cardVariants.animate}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={cardVariants.transition}
-      className="relative group"
+      initial={{ opacity: 0, y: 50, rotateX: -15 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ 
+        delay: index * 0.15, 
+        duration: 0.7,
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }}
+      whileHover={{ 
+        y: -10, 
+        rotateX: 5,
+        transition: { duration: 0.3 }
+      }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="relative group h-full"
+      style={{ perspective: '1000px' }}
     >
-      <div 
-        className={`absolute -inset-4 rounded-2xl blur-xl transition-all duration-200 ${
-          cardFlicker 
-            ? `bg-gradient-to-r ${colorConfig.glow} opacity-100 scale-110` 
-            : `bg-gradient-to-r ${colorConfig.glow} opacity-60`
-        }`} 
-      />
+      {/* Background glow */}
+      <div className={`
+        absolute -inset-4 rounded-3xl blur-2xl transition-all duration-500
+        bg-gradient-to-r ${colorConfig.bgGradient}
+        ${isHovered ? 'opacity-100 scale-105' : 'opacity-60 scale-100'}
+      `} />
       
-      <div className={`relative bg-black/80 backdrop-blur-sm border ${colorConfig.border} rounded-xl p-6 hover:bg-black/90 transition-all duration-300 group-hover:scale-105`}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className={`p-3 rounded-lg bg-black/60 backdrop-blur-sm border ${colorConfig.border}`}>
-            <Icon className={`w-6 h-6 ${colorConfig.icon}`} />
+      {/* Main card */}
+      <div className={`
+        relative h-full bg-white/5 backdrop-blur-sm border ${colorConfig.borderColor}
+        rounded-2xl p-8 transition-all duration-300
+        ${isHovered ? 'bg-white/10 border-opacity-60' : ''}
+      `}>
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className={`
+            relative p-4 rounded-xl bg-gradient-to-r ${colorConfig.gradient}
+            shadow-lg transition-transform duration-300
+            ${isHovered ? 'scale-110 rotate-3' : ''}
+          `}>
+            <Icon className="w-8 h-8 text-white" />
+            
+            {/* Icon glow effect */}
+            {isHovered && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className={`
+                  absolute -inset-2 rounded-xl blur-md -z-10
+                  bg-gradient-to-r ${colorConfig.gradient} opacity-60
+                `}
+              />
+            )}
           </div>
-          <h3 className={`text-xl font-bold tracking-wide ${colorConfig.icon}`} style={{
-            textShadow: `0 0 10px currentColor, 0 0 20px currentColor`,
-            fontFamily: "'Arial Black', sans-serif"
-          }}>
-            {title}
-          </h3>
+          
+          <div>
+            <h3 className={`text-2xl font-bold ${colorConfig.iconColor} mb-1`}>
+              {title}
+            </h3>
+            <div className={`h-1 w-16 bg-gradient-to-r ${colorConfig.gradient} rounded-full`} />
+          </div>
         </div>
 
-        <ul className="space-y-4">
+        {/* Points */}
+        <div className="space-y-4">
           {points.map((point, pointIndex) => (
-            <motion.li 
+            <motion.div
               key={pointIndex}
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ delay: (index * 0.2) + (pointIndex * 0.1) + 0.3 }}
-              className="text-gray-200 flex items-start gap-3 text-sm leading-relaxed"
+              viewport={{ once: true, margin: "-30px" }}
+              transition={{ 
+                delay: (index * 0.15) + (pointIndex * 0.1) + 0.3,
+                duration: 0.5
+              }}
+              className="group/point flex items-start gap-3"
             >
-              <span className={`${colorConfig.icon} mt-1 font-bold`} style={{
-                textShadow: `0 0 5px currentColor`
-              }}>⚡</span>
-              <span>{point}</span>
-            </motion.li>
+              <div className={`
+                mt-2 w-2 h-2 rounded-full bg-gradient-to-r ${colorConfig.gradient}
+                transition-all duration-300 group-hover/point:scale-125
+              `} />
+              
+              <p className="text-gray-300 leading-relaxed group-hover/point:text-gray-200 transition-colors duration-300">
+                {point}
+              </p>
+            </motion.div>
           ))}
-        </ul>
+        </div>
 
-        <div 
-          className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent transition-all duration-200 ${
-            cardFlicker ? 'opacity-100' : 'opacity-0'
-          }`}
-          style={{
-            animation: cardFlicker ? 'scan 0.5s ease-in-out' : 'none'
+        {/* Hover indicator */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ 
+            opacity: isHovered ? 1 : 0,
+            y: isHovered ? 0 : 20
           }}
-        />
+          className="mt-6 flex items-center gap-2 text-sm font-medium"
+        >
+          <span className={colorConfig.accentColor}>Learn more</span>
+          <ChevronRight className={`w-4 h-4 ${colorConfig.accentColor}`} />
+        </motion.div>
+
+        {/* Corner accent */}
+        <div className={`
+          absolute top-0 right-0 w-20 h-20 rounded-bl-3xl rounded-tr-2xl
+          bg-gradient-to-br ${colorConfig.gradient} opacity-10
+        `} />
       </div>
     </motion.div>
   );
 });
 
-SkillCard.displayName = 'SkillCard';
-
-// Memoized floating particle component
-const FloatingParticle = React.memo(({ className, delay, duration }) => (
-  <motion.div 
-    className={`absolute w-1 h-1 rounded-full ${className}`}
-    animate={{ 
-      opacity: [0, 1, 0], 
-      scale: [0, 1.5, 0],
-      y: [0, -30, -60]
-    }}
-    transition={{ duration, repeat: Infinity, repeatDelay: delay }}
-  />
-));
-
-FloatingParticle.displayName = 'FloatingParticle';
+const FloatingShape = React.memo(({ className, size, initialX, initialY, duration }) => {
+  return (
+    <motion.div
+      className={`absolute ${className} ${size} rounded-full blur-sm opacity-30`}
+      style={{ left: initialX, top: initialY }}
+      animate={{
+        x: [0, 40, -30, 0],
+        y: [0, -50, 30, 0],
+        scale: [1, 1.3, 0.9, 1],
+        opacity: [0.3, 0.7, 0.4, 0.3]
+      }}
+      transition={{
+        duration,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+    />
+  );
+});
 
 const WhatIDo = () => {
-  const [sectionFlicker, setSectionFlicker] = useState(false);
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+  
+  const y = useTransform(scrollYProgress, [0, 1], [50, -50]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+  const smoothY = useSpring(y, { stiffness: 100, damping: 30 });
 
-  // Optimized section flicker
-  useEffect(() => {
-    const flickerDelay = 4000 + Math.random() * 6000;
-    
-    const interval = setInterval(() => {
-      setSectionFlicker(true);
-      const timeout = setTimeout(() => setSectionFlicker(false), 200);
-      return () => clearTimeout(timeout);
-    }, flickerDelay);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Memoize skills data
   const skills = useMemo(() => [
     {
       icon: Brain,
       title: 'Data Science & AI',
       points: [
-        'Developing highly scalable production-ready models for various deep learning and statistical use cases',
-        'Experience working with Computer Vision and NLP projects',
-        'Complex quantitative modeling for dynamic forecasting and time series analysis',
+        'Developing highly scalable production ready models for various deep learning and statistical use cases',
+        'Experience working with Computer Vision and NLP projects using TensorFlow, PyTorch, and scikit learn',
+        'Complex quantitative modeling for dynamic forecasting and time series analysis with advanced statistical methods',
+        'Building intelligent systems that can process and analyze large datasets to extract meaningful insights'
       ],
     },
     {
       icon: Code,
       title: 'Full Stack Development',
       points: [
-        'Building responsive website front ends using React and Redux',
-        'Developing mobile applications using Flutter, React Native, and Kotlin',
-        'Creating application backends in Node, Express, and Flask',
+        'Building responsive, high performance web applications using React, Redux, and modern JavaScript frameworks',
+        'Developing cross platform mobile applications using Flutter, React Native, and native Android/iOS development',
+        'Creating robust backend systems and APIs using Node.js, Express, Python Flask, and microservices architecture',
+        'Implementing real time features, authentication systems, and database optimization for scalable applications'
       ],
     },
     {
       icon: Cloud,
-      title: 'Cloud Infra-Architecture',
+      title: 'Cloud Infrastructure',
       points: [
-        'Experience working on multiple cloud platforms',
-        'Hosting and maintaining websites on virtual machine instances with database integration',
-        'Deploying deep learning models on the cloud for mobile devices',
+        'Designing and deploying applications on AWS, Google Cloud Platform, and Azure with auto scaling capabilities',
+        'Managing containerized applications using Docker and Kubernetes for efficient deployment and orchestration',
+        'Implementing CI/CD pipelines for automated testing, building, and deployment of applications',
+        'Setting up monitoring, logging, and alerting systems to ensure high availability and performance'
       ],
     },
     {
       icon: Palette,
       title: 'UI/UX Design',
       points: [
-        'Designing highly attractive user interfaces for mobile and web applications',
-        'Customizing logo designs and building logos from scratch',
-        'Creating application flow to optimize user experience',
+        'Creating intuitive and visually appealing user interfaces with a focus on accessibility and user experience',
+        'Designing comprehensive design systems and style guides for consistent branding across platforms',
+        'Conducting user research and usability testing to optimize application flow and user satisfaction',
+        'Proficient in Figma, Adobe Creative Suite, and prototyping tools for rapid design iteration'
       ],
     },
   ], []);
 
-  // Memoize background styles
-  const backgroundStyles = useMemo(() => ({
-    grid: {
-      backgroundImage: `
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px)
-      `,
-      backgroundSize: '50px 50px'
-    },
-    gradient: sectionFlicker 
-      ? 'radial-gradient(ellipse 1000px 600px at 30% 40%, rgba(255,165,0,0.15) 0%, rgba(255,215,0,0.1) 30%, transparent 70%), radial-gradient(ellipse 800px 400px at 70% 60%, rgba(0,255,127,0.1) 0%, rgba(50,255,150,0.05) 40%, transparent 80%)'
-      : 'radial-gradient(ellipse 800px 500px at 30% 40%, rgba(255,165,0,0.08) 0%, rgba(255,215,0,0.05) 30%, transparent 70%), radial-gradient(ellipse 600px 300px at 70% 60%, rgba(0,255,127,0.06) 0%, rgba(50,255,150,0.03) 40%, transparent 80%)'
-  }), [sectionFlicker]);
-
-  // Memoized floating particles data
-  const particles = useMemo(() => [
-    { className: "top-1/4 left-1/5 bg-orange-300", delay: 4, duration: 5 },
-    { className: "top-3/4 right-1/4 bg-green-300", delay: 2.5, duration: 4.5 },
-    { className: "top-1/2 right-1/3 bg-blue-300", delay: 1.5, duration: 6 }
+  const floatingShapes = useMemo(() => [
+    { className: 'bg-orange-400', size: 'w-3 h-3', initialX: '10%', initialY: '20%', duration: 12 },
+    { className: 'bg-green-400', size: 'w-2 h-2', initialX: '85%', initialY: '30%', duration: 15 },
+    { className: 'bg-blue-400', size: 'w-4 h-4', initialX: '70%', initialY: '70%', duration: 18 },
+    { className: 'bg-purple-400', size: 'w-2 h-2', initialX: '20%', initialY: '80%', duration: 14 },
+    { className: 'bg-pink-400', size: 'w-3 h-3', initialX: '90%', initialY: '15%', duration: 16 }
   ], []);
 
   return (
-    <section id="what-i-do" className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen w-full overflow-hidden bg-black">
-      <div 
-        className={`absolute inset-0 transition-all duration-200 ${
-          sectionFlicker ? 'opacity-40' : 'opacity-20'
-        }`}
-        style={backgroundStyles.grid}
-      />
+    <section 
+      ref={containerRef}
+      id="what-i-do" 
+      className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0a0a0a 100%)'
+      }}
+    >
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 20% 30%, rgba(255,165,0,0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 70%, rgba(34,197,94,0.08) 0%, transparent 50%),
+              radial-gradient(circle at 40% 80%, rgba(59,130,246,0.06) 0%, transparent 50%),
+              radial-gradient(circle at 70% 20%, rgba(168,85,247,0.08) 0%, transparent 50%)
+            `
+          }}
+        />
+        
+        {/* Floating Shapes */}
+        {floatingShapes.map((shape, index) => (
+          <FloatingShape key={index} {...shape} />
+        ))}
+      </div>
 
-      <div 
-        className={`absolute inset-0 transition-all duration-200 ${
-          sectionFlicker ? 'opacity-100' : 'opacity-70'
-        }`}
-        style={{ background: backgroundStyles.gradient }}
-      />
-
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 z-10" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40 z-10" />
-
-      <div className="relative z-20 max-w-7xl mx-auto">
+      <motion.div 
+        style={{ y: smoothY, opacity }}
+        className="relative z-10 max-w-7xl mx-auto"
+      >
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
           className="text-center mb-20"
         >
-          <div className="relative inline-block">
-            <div 
-              className={`absolute -inset-6 rounded-2xl blur-2xl transition-all duration-200 ${
-                sectionFlicker 
-                  ? 'bg-gradient-to-r from-orange-400/40 via-green-300/50 to-orange-400/40 opacity-100 scale-110' 
-                  : 'bg-gradient-to-r from-orange-400/20 via-green-300/30 to-orange-400/20 opacity-80'
-              }`} 
-            />
-            
-            <h2 className={`relative text-4xl font-bold mb-6 transition-all duration-200 ${
-              sectionFlicker ? 'brightness-150 scale-105' : ''
-            }`}>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-green-400">
+          <motion.div className="relative inline-block mb-6">
+            <motion.h2 
+              className="text-5xl md:text-6xl font-bold relative"
+              whileHover={{ scale: 1.05 }}
+            >
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-green-400 via-blue-400 to-purple-400">
                 What I Do
               </span>
-            </h2>
-          </div>
+              <motion.div
+                className="absolute -inset-4 bg-gradient-to-r from-orange-400/20 via-green-400/20 via-blue-400/20 to-purple-400/20 rounded-2xl blur-xl"
+                animate={{ opacity: [0.5, 0.8, 0.5] }}
+                transition={{ duration: 4, repeat: Infinity }}
+              />
+            </motion.h2>
+            
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Sparkles className="w-5 h-5 text-blue-400" />
+              <p className="text-gray-400 text-lg">Transforming ideas into digital reality</p>
+              <Sparkles className="w-5 h-5 text-purple-400" />
+            </div>
+          </motion.div>
         </motion.div>
 
+        {/* Skills Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {skills.map((skill, index) => (
             <SkillCard key={skill.title} {...skill} index={index} />
           ))}
         </div>
-      </div>
 
-      {/* Optimized floating particles */}
-      <div className="absolute inset-0 z-25 pointer-events-none">
-        {particles.map((particle, index) => (
-          <FloatingParticle key={index} {...particle} />
-        ))}
-      </div>
-
-      <style jsx>{`
-        @keyframes scan {
-          0% { transform: translateY(0); }
-          50% { transform: translateY(200px); }
-          100% { transform: translateY(0); }
-        }
-      `}</style>
+        {/* Bottom CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="text-center mt-16"
+        >
+          <div className="relative inline-block">
+            <div className="absolute -inset-4 bg-gradient-to-r from-orange-400/20 to-purple-400/20 rounded-2xl blur-xl" />
+            <p className="relative text-gray-300 text-lg px-6 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl">
+              Ready to bring your next project to life? Let's collaborate and create something amazing together.
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 };

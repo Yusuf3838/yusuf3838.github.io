@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Home, User, FolderOpen, Mail, ExternalLink } from 'lucide-react';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,158 +16,246 @@ const Navbar = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const navItems = [
+    { name: 'Home', href: '#home', icon: Home },
+    { name: 'About', href: '#about', icon: User },
+    { name: 'Projects', href: '#projects', icon: FolderOpen },
+    { name: 'Contact', href: '#contact', icon: Mail },
+  ];
+
   return (
     <>
-      {/* Flickering background overlay */}
-      <div 
-        className={`fixed inset-0 z-40 transition-all duration-200 pointer-events-none ${
-          navFlicker ? 'opacity-30' : 'opacity-15'
-        }`}
-        style={{
-          backgroundImage: `
-            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
-            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px)
-          `,
-          backgroundSize: '40px 40px'
-        }}
-      />
-
-      {/* Ambient lighting for navbar */}
-      <div 
-        className={`fixed top-0 left-0 right-0 h-20 z-40 transition-all duration-200 pointer-events-none ${
-          navFlicker ? 'opacity-100' : 'opacity-60'
-        }`}
-        style={{
-          background: navFlicker 
-            ? 'radial-gradient(ellipse 800px 100px at 50% 0%, rgba(255,165,0,0.2) 0%, rgba(255,215,0,0.15) 30%, transparent 70%)'
-            : 'radial-gradient(ellipse 600px 80px at 50% 0%, rgba(255,165,0,0.1) 0%, rgba(255,215,0,0.08) 30%, transparent 70%)'
-        }}
-      />
-
-      <nav className="fixed w-full z-50 bg-black/80 backdrop-blur-sm border-b border-green-400/20">
-        {/* Outer glow that flickers */}
-        <div 
-          className={`absolute -inset-2 bg-gradient-to-r from-orange-400/20 via-green-300/30 to-orange-400/20 blur-xl transition-all duration-200 ${
-            navFlicker ? 'opacity-100 scale-110' : 'opacity-60'
-          }`} 
-        />
-
-        <div className="relative px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-8">
-                {['Home', 'About', 'Projects', 'Contact'].map((item, index) => (
-                  <motion.a
-                    key={item}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.1 }}
-                    href={`#${item.toLowerCase()}`}
-                    className={`relative px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 group ${
-                      navFlicker ? 'brightness-125' : ''
-                    }`}
-                  >
-                    {/* Hover glow effect */}
-                    <div className="absolute -inset-2 bg-gradient-to-r from-orange-400/20 to-green-400/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity" />
-                    
-                    <span className="relative text-gray-300 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-orange-400 group-hover:to-green-400 transition-all">
-                      {item}
-                    </span>
-
-                    {/* Lightning bolt indicator */}
-                    <span className="absolute -top-1 -right-1 text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs">
-                      ⚡
-                    </span>
-                  </motion.a>
-                ))}
-              </div>
+      {/* Logo Button - Fixed Position */}
+      <motion.div 
+        className="fixed top-6 left-6 z-50"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative group"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {/* Glow effect */}
+          <div 
+            className={`absolute -inset-2 rounded-xl blur-lg transition-all duration-300 ${
+              navFlicker ? 'opacity-100' : 'opacity-60'
+            }`}
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
+            }}
+          />
+          
+          {/* Logo container */}
+          <div className="relative w-12 h-12 bg-black/70 backdrop-blur-md rounded-xl border border-white/20 flex items-center justify-center transition-all duration-300 group-hover:bg-black/80 group-hover:border-white/30">
+            {/* Placeholder for logo.png - replace this with actual image */}
+            <div className="w-8 h-8 bg-gradient-to-br from-white to-gray-300 rounded-lg flex items-center justify-center text-black font-bold text-sm">
+              YS
             </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsOpen(!isOpen)}
-                className={`relative p-2 rounded-md border border-orange-400/30 bg-black/60 text-gray-300 hover:text-orange-400 transition-colors ${
-                  navFlicker ? 'brightness-125' : ''
-                }`}
-              >
-                <div className="absolute -inset-1 bg-gradient-to-r from-orange-400/20 to-green-400/20 rounded-lg blur opacity-0 hover:opacity-100 transition-opacity" />
-                <span className="relative">
-                  {isOpen ? <X size={20} /> : <Menu size={20} />}
-                </span>
-              </motion.button>
-            </div>
+            {/* Uncomment and use this when you have logo.png */}
+            {/* <img src="logo.png" alt="Logo" className="w-8 h-8 object-contain" /> */}
           </div>
-        </div>
 
-        {/* Mobile Navigation */}
+          {/* Scan line effect */}
+          <motion.div
+            className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent"
+            initial={{ x: '-100%', opacity: 0 }}
+            animate={{ 
+              x: isOpen ? '100%' : '-100%',
+              opacity: isOpen ? [0, 1, 0] : 0
+            }}
+            transition={{ duration: 0.8 }}
+          />
+        </motion.button>
+      </motion.div>
+
+      {/* Sidebar Overlay */}
+      <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="md:hidden relative"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ x: -300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -300, opacity: 0 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 30,
+              opacity: { duration: 0.2 }
+            }}
+            className="fixed left-0 top-0 h-full w-80 z-50"
           >
-            {/* Mobile menu glow */}
-            <div className="absolute -inset-2 bg-gradient-to-r from-orange-400/20 via-green-300/30 to-orange-400/20 blur-xl opacity-80" />
-            
-            <div className="relative bg-black/90 backdrop-blur-sm border-t border-orange-400/20 px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {['Home', 'About', 'Projects', 'Contact'].map((item, index) => (
-                <motion.a
-                  key={item}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  href={`#${item.toLowerCase()}`}
-                  className="relative block px-3 py-2 rounded-md text-base font-bold text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-green-400 transition-all group"
-                  onClick={() => setIsOpen(false)}
+            {/* Sidebar glow effect */}
+            <div 
+              className={`absolute -inset-4 blur-xl transition-all duration-500 ${
+                navFlicker ? 'opacity-100' : 'opacity-70'
+              }`}
+              style={{
+                background: `
+                  linear-gradient(135deg, 
+                    rgba(255,255,255,0.1) 0%,
+                    rgba(255,255,255,0.05) 50%,
+                    rgba(255,255,255,0.1) 100%
+                  )
+                `,
+              }}
+            />
+
+            {/* Sidebar content */}
+            <div className="relative h-full bg-black/80 backdrop-blur-xl border-r border-white/20">
+              {/* Sidebar header */}
+              <div className="p-8 border-b border-white/10">
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-center"
                 >
-                  {/* Mobile hover glow */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-orange-400/20 to-green-400/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="relative flex items-center gap-2">
-                    {item}
-                    <span className="text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs">⚡</span>
-                  </span>
-                </motion.a>
-              ))}
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-white to-gray-300 rounded-2xl flex items-center justify-center text-black font-bold text-xl">
+                    YS
+                  </div>
+                  <h2 
+                    className="text-xl font-bold mb-2"
+                    style={{
+                      background: 'linear-gradient(135deg, #ffffff, #e0e0e0)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: '0 0 20px rgba(255, 255, 255, 0.3)',
+                    }}
+                  >
+                    Yusuf Sheikhali
+                  </h2>
+                  <p className="text-sm text-white/60">
+                    Full Stack Developer
+                  </p>
+                </motion.div>
+              </div>
+
+              {/* Navigation items */}
+              <nav className="p-6">
+                <div className="space-y-2">
+                  {navItems.map((item, index) => (
+                    <motion.a
+                      key={item.name}
+                      href={item.href}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 + index * 0.1 }}
+                      whileHover={{ x: 8 }}
+                      onClick={() => setIsOpen(false)}
+                      className="group relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-white/5"
+                    >
+                      {/* Hover glow */}
+                      <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity blur-sm" />
+                      
+                      {/* Icon */}
+                      <item.icon 
+                        className="w-5 h-5 relative z-10 transition-colors group-hover:text-white"
+                        style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                      />
+                      
+                      {/* Text */}
+                      <span 
+                        className="relative z-10 font-medium transition-colors group-hover:text-white"
+                        style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                      >
+                        {item.name}
+                      </span>
+
+                      {/* Arrow indicator */}
+                      <motion.div
+                        className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        <ExternalLink className="w-4 h-4 text-white/50" />
+                      </motion.div>
+
+                      {/* Scan line effect on hover */}
+                      <motion.div
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100"
+                        animate={{ x: ['-100%', '100%'] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      />
+                    </motion.a>
+                  ))}
+                </div>
+              </nav>
+
+              {/* Footer */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="absolute bottom-8 left-6 right-6"
+              >
+                <div className="text-center">
+                  {/* Status indicator */}
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <motion.div
+                      className="w-2 h-2 rounded-full"
+                      style={{
+                        background: 'radial-gradient(circle, #00ff88 0%, #00cc6a 100%)',
+                        boxShadow: '0 0 10px rgba(0, 255, 136, 0.6)',
+                      }}
+                      animate={{ 
+                        scale: [1, 1.2, 1],
+                        opacity: [0.8, 1, 0.8],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    <span className="text-xs text-white/60">Available for projects</span>
+                  </div>
+
+                  {/* Decorative line */}
+                  <div 
+                    className="h-px w-full rounded-full"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                    }}
+                  />
+                </div>
+              </motion.div>
+
+              {/* Ambient particles */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <motion.div 
+                  className="absolute top-1/4 left-8 w-1 h-1 bg-white/30 rounded-full"
+                  animate={{ 
+                    opacity: [0, 1, 0], 
+                    scale: [0, 1, 0],
+                    y: [0, -20, 0]
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, repeatDelay: 2 }}
+                />
+                <motion.div 
+                  className="absolute top-1/2 right-8 w-1 h-1 bg-white/20 rounded-full"
+                  animate={{ 
+                    opacity: [0, 1, 0], 
+                    scale: [0, 1.2, 0],
+                    y: [0, 15, 0]
+                  }}
+                  transition={{ duration: 5, repeat: Infinity, repeatDelay: 3 }}
+                />
+              </div>
             </div>
           </motion.div>
         )}
-
-        {/* Scan line effect */}
-        <div 
-          className={`absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-green-400/40 to-transparent transition-all duration-200 ${
-            navFlicker ? 'opacity-100' : 'opacity-40'
-          }`}
-        />
-      </nav>
-
-      {/* Floating particles for navbar area */}
-      <div className="fixed top-0 left-0 right-0 h-20 z-45 pointer-events-none">
-        <motion.div 
-          className="absolute top-2 left-1/4 w-1 h-1 bg-orange-300 rounded-full"
-          animate={{ 
-            opacity: [0, 1, 0], 
-            scale: [0, 1, 0],
-            x: [0, 30, 60]
-          }}
-          transition={{ duration: 4, repeat: Infinity, repeatDelay: 3 }}
-        />
-        <motion.div 
-          className="absolute top-3 right-1/3 w-1 h-1 bg-green-300 rounded-full"
-          animate={{ 
-            opacity: [0, 1, 0], 
-            scale: [0, 1.2, 0],
-            x: [0, -25, -50]
-          }}
-          transition={{ duration: 5, repeat: Infinity, repeatDelay: 2 }}
-        />
-      </div>
+      </AnimatePresence>
     </>
   );
 };

@@ -1,272 +1,305 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Github, Linkedin } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { Mail, Github, Linkedin, MessageCircle, Send, Sparkles } from 'lucide-react';
 
-const ContactIcon = ({ href, icon: Icon, label, index }) => {
-  const [iconFlicker, setIconFlicker] = useState(false);
+const ContactIcon = React.memo(({ href, icon: Icon, label, description, index }) => {
+  const [isHovered, setIsHovered] = useState(false);
 
-  // Random flicker effect for each icon
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIconFlicker(true);
-      setTimeout(() => setIconFlicker(false), 150);
-    }, Math.random() * 4000 + 3000 + (index * 800));
-
-    return () => clearInterval(interval);
+  const colorConfig = useMemo(() => {
+    const configs = [
+      {
+        gradient: 'from-orange-500 to-red-500',
+        bgGradient: 'from-orange-500/10 to-red-500/10',
+        iconColor: 'text-orange-400',
+        borderColor: 'border-orange-400/30',
+        glowColor: 'shadow-orange-500/25'
+      },
+      {
+        gradient: 'from-emerald-500 to-teal-500',
+        bgGradient: 'from-emerald-500/10 to-teal-500/10',
+        iconColor: 'text-emerald-400',
+        borderColor: 'border-emerald-400/30',
+        glowColor: 'shadow-emerald-500/25'
+      },
+      {
+        gradient: 'from-blue-500 to-cyan-500',
+        bgGradient: 'from-blue-500/10 to-cyan-500/10',
+        iconColor: 'text-blue-400',
+        borderColor: 'border-blue-400/30',
+        glowColor: 'shadow-blue-500/25'
+      }
+    ];
+    return configs[index] || configs[0];
   }, [index]);
-
-  const glowColors = {
-    0: 'from-orange-400/30 via-yellow-300/40 to-orange-400/30', // Mail - orange
-    1: 'from-green-400/30 via-lime-300/40 to-green-400/30',     // GitHub - green
-    2: 'from-blue-400/30 via-cyan-300/40 to-blue-400/30'       // LinkedIn - blue
-  };
-
-  const borderColors = {
-    0: 'border-orange-400/60',
-    1: 'border-green-400/60',
-    2: 'border-blue-400/60'
-  };
-
-  const iconColors = {
-    0: 'text-orange-400',
-    1: 'text-green-400',
-    2: 'text-blue-400'
-  };
 
   return (
     <motion.a
       href={href}
       target={href.startsWith('mailto:') ? undefined : '_blank'}
       rel={href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.2, duration: 0.8 }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
-      className="relative group"
+      initial={{ opacity: 0, y: 50, rotateX: -15 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ 
+        delay: index * 0.2, 
+        duration: 0.8,
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }}
+      whileHover={{ 
+        y: -8, 
+        rotateX: 5,
+        transition: { duration: 0.3 }
+      }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="group block relative"
+      style={{ perspective: '1000px' }}
     >
-      {/* Outer glow that flickers */}
-      <div 
-        className={`absolute -inset-4 rounded-2xl blur-xl transition-all duration-200 ${
-          iconFlicker 
-            ? `bg-gradient-to-r ${glowColors[index]} opacity-100 scale-110` 
-            : `bg-gradient-to-r ${glowColors[index]} opacity-60`
-        }`} 
-      />
-      
-      {/* Icon container */}
-      <div className={`relative p-4 rounded-xl bg-black/80 backdrop-blur-sm border ${borderColors[index]} hover:bg-black/90 transition-all duration-300 group-hover:scale-105`}>
-        <Icon className={`w-8 h-8 ${iconColors[index]} transition-all duration-300`} style={{
-          filter: iconFlicker ? 'drop-shadow(0 0 10px currentColor)' : 'none'
-        }} />
-        
-        {/* Lightning bolt indicator */}
-        <span className={`absolute -top-1 -right-1 ${iconColors[index]} opacity-0 group-hover:opacity-100 transition-opacity text-xs`}>
-          ⚡
-        </span>
+      {/* Background glow */}
+      <div className={`
+        absolute -inset-4 rounded-3xl blur-2xl transition-all duration-500
+        bg-gradient-to-r ${colorConfig.bgGradient}
+        ${isHovered ? 'opacity-100 scale-110' : 'opacity-60 scale-100'}
+      `} />
 
-        {/* Scan line effect */}
-        <div 
-          className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent transition-all duration-200 ${
-            iconFlicker ? 'opacity-100' : 'opacity-0'
-          }`}
-          style={{
-            animation: iconFlicker ? 'scan 0.5s ease-in-out' : 'none'
+      {/* Main card */}
+      <div className={`
+        relative bg-white/[0.04] backdrop-blur-xl border ${colorConfig.borderColor}
+        rounded-2xl p-8 transition-all duration-300 text-center
+        ${isHovered ? 'bg-white/[0.08] border-opacity-60' : ''}
+      `}>
+        {/* Icon container */}
+        <div className="relative mb-6">
+          <div className={`
+            inline-flex p-6 rounded-2xl bg-gradient-to-r ${colorConfig.gradient}
+            shadow-xl ${colorConfig.glowColor} transition-all duration-300
+            ${isHovered ? 'scale-110 rotate-3' : ''}
+          `}>
+            <Icon className="w-8 h-8 text-white" />
+            
+            {/* Icon glow effect */}
+            {isHovered && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className={`
+                  absolute -inset-3 rounded-2xl blur-lg -z-10
+                  bg-gradient-to-r ${colorConfig.gradient} opacity-60
+                `}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="space-y-3">
+          <h3 className={`text-xl font-bold ${colorConfig.iconColor}`}>
+            {label}
+          </h3>
+          <p className="text-gray-400 text-sm leading-relaxed">
+            {description}
+          </p>
+          <div className={`h-0.5 w-12 bg-gradient-to-r ${colorConfig.gradient} rounded-full mx-auto`} />
+        </div>
+
+        {/* Hover indicator */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ 
+            opacity: isHovered ? 1 : 0,
+            y: isHovered ? 0 : 10
           }}
-        />
+          className="mt-4 flex items-center justify-center gap-2 text-sm font-medium"
+        >
+          <Send className={`w-4 h-4 ${colorConfig.iconColor}`} />
+          <span className={colorConfig.iconColor}>Connect</span>
+        </motion.div>
+
+        {/* Corner accent */}
+        <div className={`
+          absolute top-0 right-0 w-16 h-16 rounded-bl-2xl rounded-tr-2xl
+          bg-gradient-to-bl ${colorConfig.gradient} opacity-10
+        `} />
       </div>
-
-      {/* Label */}
-      <motion.span 
-        className={`absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-sm font-bold ${iconColors[index]} opacity-0 group-hover:opacity-100 transition-all duration-300`}
-        style={{
-          textShadow: '0 0 5px currentColor'
-        }}
-      >
-        {label}
-      </motion.span>
-
-      <style jsx>{`
-        @keyframes scan {
-          0% { transform: translateY(0); }
-          50% { transform: translateY(60px); }
-          100% { transform: translateY(0); }
-        }
-      `}</style>
     </motion.a>
   );
-};
+});
+
+const FloatingParticle = React.memo(({ className, size, initialX, initialY, duration, delay }) => {
+  return (
+    <motion.div
+      className={`absolute ${className} ${size} rounded-full blur-sm opacity-30`}
+      style={{ left: initialX, top: initialY }}
+      animate={{
+        x: [0, 50, -30, 0],
+        y: [0, -60, 40, 0],
+        scale: [1, 1.5, 0.8, 1],
+        opacity: [0.3, 0.8, 0.4, 0.3]
+      }}
+      transition={{
+        duration,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay
+      }}
+    />
+  );
+});
 
 const Contact = () => {
-  const [sectionFlicker, setSectionFlicker] = useState(false);
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+  
+  const y = useTransform(scrollYProgress, [0, 1], [30, -30]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+  const smoothY = useSpring(y, { stiffness: 100, damping: 30 });
 
-  // Section-wide flicker effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSectionFlicker(true);
-      setTimeout(() => setSectionFlicker(false), 200);
-    }, Math.random() * 6000 + 4000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const contactLinks = [
+  const contactLinks = useMemo(() => [
     {
       href: "mailto:yusuf.sheikhali@outlook.com",
       icon: Mail,
-      label: "Email"
+      label: "Email",
+      description: "Drop me a line and let's start a conversation about your next project"
     },
     {
       href: "https://github.com/Yusuf3838",
       icon: Github,
-      label: "GitHub"
+      label: "GitHub",
+      description: "Explore my code, contribute to projects, and see what I'm building"
     },
     {
       href: "https://www.linkedin.com/in/yusufsheikhali/",
       icon: Linkedin,
-      label: "LinkedIn"
+      label: "LinkedIn",
+      description: "Connect professionally and stay updated with my latest work"
     }
-  ];
+  ], []);
+
+  const floatingParticles = useMemo(() => [
+    { className: 'bg-orange-400', size: 'w-2 h-2', initialX: '20%', initialY: '25%', duration: 12, delay: 0 },
+    { className: 'bg-emerald-400', size: 'w-3 h-3', initialX: '80%', initialY: '35%', duration: 15, delay: 2 },
+    { className: 'bg-blue-400', size: 'w-1 h-1', initialX: '70%', initialY: '70%', duration: 18, delay: 4 },
+    { className: 'bg-purple-400', size: 'w-2 h-2', initialX: '30%', initialY: '75%', duration: 14, delay: 1 },
+    { className: 'bg-cyan-400', size: 'w-1 h-1', initialX: '15%', initialY: '15%', duration: 16, delay: 3 }
+  ], []);
 
   return (
-    <section id="contact" className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen w-full overflow-hidden bg-black">
-      {/* Street-like background with subtle texture */}
-      <div 
-        className={`absolute inset-0 transition-all duration-200 ${
-          sectionFlicker ? 'opacity-40' : 'opacity-20'
-        }`}
-        style={{
-          backgroundImage: `
-            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
-            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }}
-      />
+    <section 
+      ref={containerRef}
+      id="contact" 
+      className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)'
+      }}
+    >
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div 
+          className="absolute inset-0 opacity-25"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 30% 20%, rgba(255,165,0,0.08) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(34,197,94,0.06) 0%, transparent 50%),
+              radial-gradient(circle at 50% 50%, rgba(59,130,246,0.05) 0%, transparent 50%)
+            `
+          }}
+        />
+        
+        {/* Floating particles */}
+        {floatingParticles.map((particle, index) => (
+          <FloatingParticle key={index} {...particle} />
+        ))}
+      </div>
 
-      {/* Ambient lighting gradients */}
-      <div 
-        className={`absolute inset-0 transition-all duration-200 ${
-          sectionFlicker ? 'opacity-100' : 'opacity-70'
-        }`}
-        style={{
-          background: sectionFlicker 
-            ? 'radial-gradient(ellipse 1000px 600px at 50% 50%, rgba(255,165,0,0.15) 0%, rgba(255,215,0,0.1) 30%, transparent 70%), radial-gradient(ellipse 800px 400px at 30% 70%, rgba(0,255,127,0.1) 0%, rgba(50,255,150,0.05) 40%, transparent 80%)'
-            : 'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(255,165,0,0.08) 0%, rgba(255,215,0,0.05) 30%, transparent 70%), radial-gradient(ellipse 600px 300px at 30% 70%, rgba(0,255,127,0.06) 0%, rgba(50,255,150,0.03) 40%, transparent 80%)'
-        }}
-      />
-
-      {/* Dark vignette */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 z-10" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40 z-10" />
-
-      <div className="relative z-20 flex flex-col items-center justify-center min-h-screen">
-        {/* Section title */}
+      <motion.div 
+        style={{ y: smoothY, opacity }}
+        className="relative z-10 max-w-6xl mx-auto"
+      >
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <div className="relative inline-block">
-            {/* Title glow */}
-            <div 
-              className={`absolute -inset-6 rounded-2xl blur-2xl transition-all duration-200 ${
-                sectionFlicker 
-                  ? 'bg-gradient-to-r from-orange-400/40 via-green-300/50 to-orange-400/40 opacity-100 scale-110' 
-                  : 'bg-gradient-to-r from-orange-400/20 via-green-300/30 to-orange-400/20 opacity-80'
-              }`} 
-            />
-            
-            <h2 className={`relative text-4xl font-bold mb-6 transition-all duration-200 ${
-              sectionFlicker ? 'brightness-150 scale-105' : ''
-            }`}>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-green-400">
+          <motion.div className="relative inline-block mb-8">
+            <motion.h2 
+              className="text-5xl md:text-6xl font-bold relative"
+              whileHover={{ scale: 1.05 }}
+            >
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-emerald-400 to-blue-400">
                 Get In Touch
               </span>
-            </h2>
-          </div>
+              <motion.div
+                className="absolute -inset-4 bg-gradient-to-r from-orange-400/15 via-emerald-400/15 to-blue-400/15 rounded-2xl blur-xl"
+                animate={{ opacity: [0.4, 0.7, 0.4] }}
+                transition={{ duration: 4, repeat: Infinity }}
+              />
+            </motion.h2>
+            
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <MessageCircle className="w-5 h-5 text-emerald-400" />
+              <p className="text-gray-400 text-lg">Let's create something amazing together</p>
+              <Sparkles className="w-5 h-5 text-blue-400" />
+            </div>
+          </motion.div>
 
-          {/* Description card */}
+          {/* Description Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-            className="relative max-w-2xl mx-auto mb-12"
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="relative max-w-3xl mx-auto"
           >
-            {/* Description card glow */}
-            <div 
-              className={`absolute -inset-2 rounded-xl blur-xl transition-all duration-200 ${
-                sectionFlicker 
-                  ? 'bg-gradient-to-r from-orange-400/30 via-green-300/40 to-orange-400/30 opacity-100' 
-                  : 'bg-gradient-to-r from-orange-400/20 via-green-300/30 to-orange-400/20 opacity-70'
-              }`} 
-            />
-            
-            <div className="relative bg-black/80 backdrop-blur-sm border border-orange-400/30 rounded-xl p-6">
+            <div className="absolute -inset-4 bg-gradient-to-r from-orange-400/10 to-blue-400/10 rounded-2xl blur-xl" />
+            <div className="relative bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8">
               <p className="text-gray-300 text-lg leading-relaxed">
-                I'm always open to new opportunities and collaborations. Feel free to reach out!
+                I'm always excited to collaborate on innovative projects and explore new opportunities. 
+                Whether you have a groundbreaking idea, need technical expertise, or just want to connect, 
+                I'd love to hear from you. Let's turn your vision into reality.
               </p>
-              
-              {/* Card scan line effect */}
-              <div 
-                className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-400/40 to-transparent transition-all duration-200 ${
-                  sectionFlicker ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
             </div>
           </motion.div>
         </motion.div>
 
-        {/* Contact icons */}
-        <div className="flex justify-center items-center gap-12 mb-8">
+        {/* Contact Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           {contactLinks.map((contact, index) => (
-            <ContactIcon key={index} {...contact} index={index} />
+            <ContactIcon key={contact.label} {...contact} index={index} />
           ))}
         </div>
-      </div>
 
-      {/* Floating particles */}
-      <div className="absolute inset-0 z-25 pointer-events-none">
-        <motion.div 
-          className="absolute top-1/4 left-1/5 w-1 h-1 bg-orange-300 rounded-full"
-          animate={{ 
-            opacity: [0, 1, 0], 
-            scale: [0, 1.5, 0],
-            y: [0, -30, -60]
-          }}
-          transition={{ duration: 5, repeat: Infinity, repeatDelay: 4 }}
-        />
-        <motion.div 
-          className="absolute top-3/4 right-1/4 w-1 h-1 bg-green-300 rounded-full"
-          animate={{ 
-            opacity: [0, 1, 0], 
-            scale: [0, 1.2, 0],
-            y: [0, -25, -50]
-          }}
-          transition={{ duration: 4.5, repeat: Infinity, repeatDelay: 2.5 }}
-        />
-        <motion.div 
-          className="absolute top-1/2 left-1/3 w-1 h-1 bg-blue-300 rounded-full"
-          animate={{ 
-            opacity: [0, 1, 0], 
-            scale: [0, 1, 0],
-            x: [0, 40, 80]
-          }}
-          transition={{ duration: 6, repeat: Infinity, repeatDelay: 1.5 }}
-        />
-        <motion.div 
-          className="absolute bottom-1/4 right-1/5 w-1 h-1 bg-orange-300 rounded-full"
-          animate={{ 
-            opacity: [0, 1, 0], 
-            scale: [0, 1.3, 0],
-            x: [0, -35, -70]
-          }}
-          transition={{ duration: 5.5, repeat: Infinity, repeatDelay: 3 }}
-        />
-      </div>
+        {/* Bottom CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+          className="text-center"
+        >
+          <div className="relative inline-block">
+            <div className="absolute -inset-4 bg-gradient-to-r from-orange-400/15 via-emerald-400/15 to-blue-400/15 rounded-2xl blur-xl" />
+            <div className="relative bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-2xl px-8 py-4">
+              <p className="text-gray-300 text-base">
+                <span className="text-orange-400 font-semibold">Ready to collaborate?</span> 
+                {' '}Choose your preferred way to connect and let's start building something extraordinary.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Decorative Elements */}
+        <div className="absolute top-1/4 left-8 w-32 h-32 bg-gradient-to-r from-orange-400/5 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-8 w-40 h-40 bg-gradient-to-l from-blue-400/5 to-transparent rounded-full blur-3xl" />
+      </motion.div>
     </section>
   );
 };
