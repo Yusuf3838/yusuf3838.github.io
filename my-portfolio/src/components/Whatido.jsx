@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import React, { useState, useMemo, useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { Brain, Code, Cloud, Palette, ChevronRight, Sparkles } from 'lucide-react';
 
-const SkillCard = React.memo(({ icon: Icon, title, points, index }) => {
+const SkillCard = React.memo(({ icon: Icon, title, points, index, isVisible }) => {
   const [isHovered, setIsHovered] = useState(false);
   
   const colorConfig = useMemo(() => {
@@ -40,61 +40,38 @@ const SkillCard = React.memo(({ icon: Icon, title, points, index }) => {
   }, [index]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50, rotateX: -15 }}
-      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ 
-        delay: index * 0.15, 
-        duration: 0.7,
-        type: "spring",
-        stiffness: 100,
-        damping: 15
+    <div 
+      className={`
+        relative group h-full transition-all duration-300
+        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+      `}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{ 
+        transitionDelay: isVisible ? `${index * 50}ms` : '0ms'
       }}
-      whileHover={{ 
-        y: -10, 
-        rotateX: 5,
-        transition: { duration: 0.3 }
-      }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      className="relative group h-full"
-      style={{ perspective: '1000px' }}
     >
       {/* Background glow */}
       <div className={`
-        absolute -inset-4 rounded-3xl blur-2xl transition-all duration-500
+        absolute -inset-4 rounded-3xl transition-all duration-300
         bg-gradient-to-r ${colorConfig.bgGradient}
-        ${isHovered ? 'opacity-100 scale-105' : 'opacity-60 scale-100'}
+        ${isHovered ? 'opacity-80 scale-105 blur-xl' : 'opacity-40 scale-100 blur-lg'}
       `} />
       
       {/* Main card */}
       <div className={`
         relative h-full bg-white/5 backdrop-blur-sm border ${colorConfig.borderColor}
-        rounded-2xl p-8 transition-all duration-300
-        ${isHovered ? 'bg-white/10 border-opacity-60' : ''}
+        rounded-2xl p-8 transition-all duration-200
+        hover:bg-white/10 hover:border-opacity-60 hover:-translate-y-2
       `}>
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <div className={`
             relative p-4 rounded-xl bg-gradient-to-r ${colorConfig.gradient}
-            shadow-lg transition-transform duration-300
-            ${isHovered ? 'scale-110 rotate-3' : ''}
+            shadow-lg transition-transform duration-200
+            group-hover:scale-105 group-hover:rotate-2
           `}>
             <Icon className="w-8 h-8 text-white" />
-            
-            {/* Icon glow effect */}
-            {isHovered && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className={`
-                  absolute -inset-2 rounded-xl blur-md -z-10
-                  bg-gradient-to-r ${colorConfig.gradient} opacity-60
-                `}
-              />
-            )}
           </div>
           
           <div>
@@ -108,41 +85,36 @@ const SkillCard = React.memo(({ icon: Icon, title, points, index }) => {
         {/* Points */}
         <div className="space-y-4">
           {points.map((point, pointIndex) => (
-            <motion.div
+            <div
               key={pointIndex}
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-30px" }}
-              transition={{ 
-                delay: (index * 0.15) + (pointIndex * 0.1) + 0.3,
-                duration: 0.5
+              className={`
+                flex items-start gap-3 transition-all duration-200
+                ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}
+              `}
+              style={{ 
+                transitionDelay: isVisible ? `${(index * 50) + (pointIndex * 30) + 100}ms` : '0ms'
               }}
-              className="group/point flex items-start gap-3"
             >
               <div className={`
                 mt-2 w-2 h-2 rounded-full bg-gradient-to-r ${colorConfig.gradient}
-                transition-all duration-300 group-hover/point:scale-125
+                transition-all duration-200 group-hover:scale-125
               `} />
               
-              <p className="text-gray-300 leading-relaxed group-hover/point:text-gray-200 transition-colors duration-300">
+              <p className="text-gray-300 leading-relaxed hover:text-gray-200 transition-colors duration-200">
                 {point}
               </p>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Hover indicator */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ 
-            opacity: isHovered ? 1 : 0,
-            y: isHovered ? 0 : 20
-          }}
-          className="mt-6 flex items-center gap-2 text-sm font-medium"
-        >
+        <div className={`
+          mt-6 flex items-center gap-2 text-sm font-medium transition-all duration-200
+          ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+        `}>
           <span className={colorConfig.accentColor}>Learn more</span>
           <ChevronRight className={`w-4 h-4 ${colorConfig.accentColor}`} />
-        </motion.div>
+        </div>
 
         {/* Corner accent */}
         <div className={`
@@ -150,25 +122,17 @@ const SkillCard = React.memo(({ icon: Icon, title, points, index }) => {
           bg-gradient-to-br ${colorConfig.gradient} opacity-10
         `} />
       </div>
-    </motion.div>
+    </div>
   );
 });
 
-const FloatingShape = React.memo(({ className, size, initialX, initialY, duration }) => {
+const OptimizedFloatingShape = React.memo(({ className, size, style }) => {
   return (
-    <motion.div
-      className={`absolute ${className} ${size} rounded-full blur-sm opacity-30`}
-      style={{ left: initialX, top: initialY }}
-      animate={{
-        x: [0, 40, -30, 0],
-        y: [0, -50, 30, 0],
-        scale: [1, 1.3, 0.9, 1],
-        opacity: [0.3, 0.7, 0.4, 0.3]
-      }}
-      transition={{
-        duration,
-        repeat: Infinity,
-        ease: "easeInOut"
+    <div
+      className={`absolute ${className} ${size} rounded-full opacity-20`}
+      style={{
+        ...style,
+        animation: `float ${8 + Math.random() * 4}s ease-in-out infinite`,
       }}
     />
   );
@@ -176,14 +140,15 @@ const FloatingShape = React.memo(({ className, size, initialX, initialY, duratio
 
 const WhatIDo = () => {
   const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"]
+  const skillsRef = useRef(null);
+  const isInView = useInView(containerRef, { 
+    once: true, 
+    margin: "-100px" 
   });
-  
-  const y = useTransform(scrollYProgress, [0, 1], [50, -50]);
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
-  const smoothY = useSpring(y, { stiffness: 100, damping: 30 });
+  const skillsInView = useInView(skillsRef, { 
+    once: true, 
+    margin: "-50px" 
+  });
 
   const skills = useMemo(() => [
     {
@@ -229,101 +194,99 @@ const WhatIDo = () => {
   ], []);
 
   const floatingShapes = useMemo(() => [
-    { className: 'bg-orange-400', size: 'w-3 h-3', initialX: '10%', initialY: '20%', duration: 12 },
-    { className: 'bg-green-400', size: 'w-2 h-2', initialX: '85%', initialY: '30%', duration: 15 },
-    { className: 'bg-blue-400', size: 'w-4 h-4', initialX: '70%', initialY: '70%', duration: 18 },
-    { className: 'bg-purple-400', size: 'w-2 h-2', initialX: '20%', initialY: '80%', duration: 14 },
-    { className: 'bg-pink-400', size: 'w-3 h-3', initialX: '90%', initialY: '15%', duration: 16 }
+    { className: 'bg-orange-400/30', size: 'w-2 h-2', style: { left: '10%', top: '20%' } },
+    { className: 'bg-green-400/30', size: 'w-1 h-1', style: { left: '85%', top: '30%' } },
+    { className: 'bg-blue-400/30', size: 'w-3 h-3', style: { left: '70%', top: '70%' } },
+    { className: 'bg-purple-400/30', size: 'w-1 h-1', style: { left: '20%', top: '80%' } },
+    { className: 'bg-pink-400/30', size: 'w-2 h-2', style: { left: '90%', top: '15%' } }
   ], []);
 
   return (
-    <section 
-      ref={containerRef}
-      id="what-i-do" 
-      className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0a0a0a 100%)'
-      }}
-    >
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `
-              radial-gradient(circle at 20% 30%, rgba(255,165,0,0.1) 0%, transparent 50%),
-              radial-gradient(circle at 80% 70%, rgba(34,197,94,0.08) 0%, transparent 50%),
-              radial-gradient(circle at 40% 80%, rgba(59,130,246,0.06) 0%, transparent 50%),
-              radial-gradient(circle at 70% 20%, rgba(168,85,247,0.08) 0%, transparent 50%)
-            `
-          }}
-        />
-        
-        {/* Floating Shapes */}
-        {floatingShapes.map((shape, index) => (
-          <FloatingShape key={index} {...shape} />
-        ))}
-      </div>
-
-      <motion.div 
-        style={{ y: smoothY, opacity }}
-        className="relative z-10 max-w-7xl mx-auto"
+    <>
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          25% { transform: translate(10px, -15px) scale(1.1); }
+          50% { transform: translate(-5px, 10px) scale(0.9); }
+          75% { transform: translate(-10px, -5px) scale(1.05); }
+        }
+      `}</style>
+      
+      <section 
+        ref={containerRef}
+        id="what-i-do" 
+        className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0a0a0a 100%)'
+        }}
       >
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-20"
-        >
-          <motion.div className="relative inline-block mb-6">
-            <motion.h2 
-              className="text-5xl md:text-6xl font-bold relative"
-              whileHover={{ scale: 1.05 }}
-            >
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-green-400 via-blue-400 to-purple-400">
-                What I Do
-              </span>
-              <motion.div
-                className="absolute -inset-4 bg-gradient-to-r from-orange-400/20 via-green-400/20 via-blue-400/20 to-purple-400/20 rounded-2xl blur-xl"
-                animate={{ opacity: [0.5, 0.8, 0.5] }}
-                transition={{ duration: 4, repeat: Infinity }}
-              />
-            </motion.h2>
-            
-            <div className="flex items-center justify-center gap-2 mt-4">
-              <Sparkles className="w-5 h-5 text-blue-400" />
-              <p className="text-gray-400 text-lg">Transforming ideas into digital reality</p>
-              <Sparkles className="w-5 h-5 text-purple-400" />
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Skills Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {skills.map((skill, index) => (
-            <SkillCard key={skill.title} {...skill} index={index} />
+        {/* Simplified Background */}
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: `
+                radial-gradient(circle at 20% 30%, rgba(255,165,0,0.08) 0%, transparent 60%),
+                radial-gradient(circle at 80% 70%, rgba(34,197,94,0.06) 0%, transparent 60%),
+                radial-gradient(circle at 40% 80%, rgba(59,130,246,0.05) 0%, transparent 60%),
+                radial-gradient(circle at 70% 20%, rgba(168,85,247,0.06) 0%, transparent 60%)
+              `
+            }}
+          />
+          
+          {/* Optimized Floating Shapes */}
+          {floatingShapes.map((shape, index) => (
+            <OptimizedFloatingShape key={index} {...shape} />
           ))}
         </div>
 
-        {/* Bottom CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="text-center mt-16"
-        >
-          <div className="relative inline-block">
-            <div className="absolute -inset-4 bg-gradient-to-r from-orange-400/20 to-purple-400/20 rounded-2xl blur-xl" />
-            <p className="relative text-gray-300 text-lg px-6 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl">
-              Ready to bring your next project to life? Let's collaborate and create something amazing together.
-            </p>
+        <div className="relative z-10 max-w-7xl mx-auto">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-20"
+          >
+            <div className="relative inline-block mb-6">
+              <h2 className="text-5xl md:text-6xl font-bold relative">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-green-400 via-blue-400 to-purple-400">
+                  What I Do
+                </span>
+              </h2>
+              
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <Sparkles className="w-5 h-5 text-blue-400" />
+                <p className="text-gray-400 text-lg">Transforming ideas into digital reality</p>
+                <Sparkles className="w-5 h-5 text-purple-400" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Skills Grid */}
+          <div ref={skillsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {skills.map((skill, index) => (
+              <SkillCard key={skill.title} {...skill} index={index} isVisible={skillsInView} />
+            ))}
           </div>
-        </motion.div>
-      </motion.div>
-    </section>
+
+          {/* Bottom CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="text-center mt-16"
+          >
+            <div className="relative inline-block">
+              <div className="absolute -inset-4 bg-gradient-to-r from-orange-400/20 to-purple-400/20 rounded-2xl blur-xl opacity-40" />
+              <p className="relative text-gray-300 text-lg px-6 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl">
+                Ready to bring your next project to life? Let's collaborate and create something amazing together.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+    </>
   );
 };
 

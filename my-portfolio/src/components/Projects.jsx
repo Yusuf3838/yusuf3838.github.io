@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { ExternalLink, Crown, Sparkles, Github, Globe } from 'lucide-react';
 
-const ProjectCard = React.memo(({ project, index }) => {
+const ProjectCard = React.memo(({ project, index, isVisible }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -63,42 +63,35 @@ const ProjectCard = React.memo(({ project, index }) => {
   const isPDFLink = project.link.includes('.pdf');
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40, scale: 0.9 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{
-        delay: index * 0.12,
-        duration: 0.8,
-        type: "spring",
-        stiffness: 100,
-        damping: 15
+    <div 
+      className={`
+        group relative h-full transition-all duration-300
+        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
+        hover:-translate-y-2
+      `}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{ 
+        transitionDelay: isVisible ? `${index * 80}ms` : '0ms'
       }}
-      whileHover={{
-        y: -8,
-        transition: { duration: 0.3, ease: "easeOut" }
-      }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      className="group relative h-full"
     >
       {/* Dynamic background glow */}
       <div className={`
-        absolute -inset-6 rounded-[2rem] blur-2xl transition-all duration-700
+        absolute -inset-6 rounded-[2rem] transition-all duration-300
         bg-gradient-to-br ${colorConfig.bgGradient}
-        ${isHovered ? 'opacity-100 scale-110' : 'opacity-50 scale-100'}
+        ${isHovered ? 'opacity-80 scale-105 blur-xl' : 'opacity-40 scale-100 blur-lg'}
       `} />
 
-      {/* Main card with organic shape */}
+      {/* Main card */}
       <div className={`
         relative h-full bg-white/[0.03] backdrop-blur-xl
         border ${colorConfig.borderColor} rounded-3xl overflow-hidden
-        transition-all duration-500 group-hover:bg-white/[0.06]
+        transition-all duration-300 hover:bg-white/[0.06]
         ${isHovered ? 'border-opacity-40' : 'border-opacity-100'}
       `}>
         {/* Animated top accent bar */}
         <div className={`
-          h-1 bg-gradient-to-r ${colorConfig.gradient} transition-all duration-300
+          h-1 bg-gradient-to-r ${colorConfig.gradient} transition-all duration-200
           ${isHovered ? 'opacity-100' : 'opacity-60'}
         `} />
 
@@ -107,17 +100,15 @@ const ProjectCard = React.memo(({ project, index }) => {
           {/* Header with logo and title */}
           <div className="flex items-center gap-4 mb-6">
             {project.title === 'Baro' && !imageError && (
-              <motion.div
-                className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-400/20 to-red-500/20 p-2 backdrop-blur-sm border border-orange-400/30"
-                whileHover={{ rotate: 5, scale: 1.1 }}
-              >
+              <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-400/20 to-red-500/20 p-2 backdrop-blur-sm border border-orange-400/30 transition-transform duration-200 hover:scale-105 hover:rotate-2">
                 <img
                   src="https://barosomaliapp.netlify.app/assets/app_logo-Dj3Mhh_1.png"
                   alt="Baro App Logo"
                   className="w-full h-full object-contain rounded-lg"
                   onError={handleImageError}
+                  loading="lazy"
                 />
-              </motion.div>
+              </div>
             )}
             
             <div className="flex-1">
@@ -126,14 +117,18 @@ const ProjectCard = React.memo(({ project, index }) => {
                   {project.title}
                 </h3>
                 {isFounderProject && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30"
-                  >
+                  <div className={`
+                    flex items-center gap-1 px-3 py-1 rounded-full 
+                    bg-gradient-to-r from-yellow-500/20 to-orange-500/20 
+                    border border-yellow-400/30 transition-all duration-200
+                    ${isVisible ? 'scale-100' : 'scale-0'}
+                  `}
+                  style={{ 
+                    transitionDelay: isVisible ? `${index * 80 + 200}ms` : '0ms'
+                  }}>
                     <Crown className="w-4 h-4 text-yellow-400" />
                     <span className="text-xs font-medium text-yellow-300">Founder</span>
-                  </motion.div>
+                  </div>
                 )}
               </div>
               <div className={`h-0.5 w-20 bg-gradient-to-r ${colorConfig.gradient} rounded-full`} />
@@ -145,43 +140,40 @@ const ProjectCard = React.memo(({ project, index }) => {
             {project.description}
           </p>
 
-          {/* Tech stack - fluid layout */}
+          {/* Tech stack */}
           <div className="flex flex-wrap gap-2">
             {project.tags.map((tag, tagIndex) => (
-              <motion.div
+              <div
                 key={tagIndex}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{ 
-                  delay: (index * 0.12) + (tagIndex * 0.05) + 0.3,
-                  duration: 0.4
+                className={`
+                  flex items-center gap-2 px-3 py-2 rounded-2xl 
+                  bg-black/30 backdrop-blur-sm border border-white/5 
+                  hover:border-white/10 transition-all duration-200
+                  ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
+                `}
+                style={{ 
+                  transitionDelay: isVisible ? `${index * 80 + tagIndex * 40 + 300}ms` : '0ms'
                 }}
-                className="group/tag flex items-center gap-2 px-3 py-2 rounded-2xl bg-black/30 backdrop-blur-sm border border-white/5 hover:border-white/10 transition-all duration-300"
               >
                 {tag.logo && (
                   <img
                     src={tag.logo}
                     alt={tag.name}
-                    className="w-4 h-4 object-contain group-hover/tag:scale-110 transition-transform duration-300"
+                    className="w-4 h-4 object-contain transition-transform duration-200 hover:scale-110"
                     onError={(e) => e.target.style.display = 'none'}
+                    loading="lazy"
                   />
                 )}
-                <span className="text-sm text-gray-400 group-hover/tag:text-gray-300 transition-colors duration-300">
+                <span className="text-sm text-gray-400 hover:text-gray-300 transition-colors duration-200">
                   {tag.name}
                 </span>
-              </motion.div>
+              </div>
             ))}
           </div>
 
           {/* Action button */}
-          <motion.div
-            className="pt-4"
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: (index * 0.12) + 0.5 }}
-          >
-            <motion.a
+          <div className="pt-4">
+            <a
               href={project.link}
               target={project.link.startsWith('http') ? '_blank' : '_self'}
               rel={project.link.startsWith('http') ? 'noopener noreferrer' : ''}
@@ -189,10 +181,8 @@ const ProjectCard = React.memo(({ project, index }) => {
                 inline-flex items-center gap-2 px-6 py-3 rounded-2xl
                 bg-gradient-to-r ${colorConfig.gradient} text-white font-medium
                 shadow-lg ${colorConfig.glowColor} hover:shadow-xl
-                transition-all duration-300 hover:scale-105
+                transition-all duration-200 hover:scale-105 hover:-translate-y-1
               `}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
             >
               {isPDFLink ? (
                 <>
@@ -210,8 +200,8 @@ const ProjectCard = React.memo(({ project, index }) => {
                   <span>Visit Project</span>
                 </>
               )}
-            </motion.a>
-          </motion.div>
+            </a>
+          </div>
         </div>
 
         {/* Subtle corner decoration */}
@@ -221,33 +211,23 @@ const ProjectCard = React.memo(({ project, index }) => {
         `} />
 
         {/* Hover effect overlay */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/[0.02] rounded-3xl pointer-events-none"
-          animate={{
-            opacity: isHovered ? 1 : 0
-          }}
-          transition={{ duration: 0.3 }}
-        />
+        <div className={`
+          absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/[0.02] 
+          rounded-3xl pointer-events-none transition-opacity duration-200
+          ${isHovered ? 'opacity-100' : 'opacity-0'}
+        `} />
       </div>
-    </motion.div>
+    </div>
   );
 });
 
-const FloatingOrb = React.memo(({ className, size, initialX, initialY, duration }) => {
+const OptimizedFloatingOrb = React.memo(({ className, size, style }) => {
   return (
-    <motion.div
-      className={`absolute ${className} ${size} rounded-full blur-lg opacity-20`}
-      style={{ left: initialX, top: initialY }}
-      animate={{
-        x: [0, 60, -40, 0],
-        y: [0, -80, 40, 0],
-        scale: [1, 1.4, 0.8, 1],
-        opacity: [0.2, 0.6, 0.3, 0.2]
-      }}
-      transition={{
-        duration,
-        repeat: Infinity,
-        ease: "easeInOut"
+    <div
+      className={`absolute ${className} ${size} rounded-full opacity-15`}
+      style={{
+        ...style,
+        animation: `floatProject ${10 + Math.random() * 6}s ease-in-out infinite`,
       }}
     />
   );
@@ -255,14 +235,15 @@ const FloatingOrb = React.memo(({ className, size, initialX, initialY, duration 
 
 const Projects = () => {
   const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"]
+  const projectsRef = useRef(null);
+  const isInView = useInView(containerRef, { 
+    once: true, 
+    margin: "-100px" 
   });
-  
-  const y = useTransform(scrollYProgress, [0, 1], [40, -40]);
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
-  const smoothY = useSpring(y, { stiffness: 100, damping: 30 });
+  const projectsInView = useInView(projectsRef, { 
+    once: true, 
+    margin: "-50px" 
+  });
 
   const projects = useMemo(() => [
     {
@@ -332,101 +313,99 @@ const Projects = () => {
   ], []);
 
   const floatingOrbs = useMemo(() => [
-    { className: 'bg-orange-400', size: 'w-4 h-4', initialX: '15%', initialY: '20%', duration: 14 },
-    { className: 'bg-emerald-400', size: 'w-3 h-3', initialX: '85%', initialY: '30%', duration: 16 },
-    { className: 'bg-blue-400', size: 'w-5 h-5', initialX: '75%', initialY: '75%', duration: 18 },
-    { className: 'bg-purple-400', size: 'w-2 h-2', initialX: '25%', initialY: '80%', duration: 15 },
-    { className: 'bg-cyan-400', size: 'w-3 h-3', initialX: '90%', initialY: '10%', duration: 17 }
+    { className: 'bg-orange-400/20', size: 'w-3 h-3', style: { left: '15%', top: '20%' } },
+    { className: 'bg-emerald-400/20', size: 'w-2 h-2', style: { left: '85%', top: '30%' } },
+    { className: 'bg-blue-400/20', size: 'w-4 h-4', style: { left: '75%', top: '75%' } },
+    { className: 'bg-purple-400/20', size: 'w-1 h-1', style: { left: '25%', top: '80%' } },
+    { className: 'bg-cyan-400/20', size: 'w-2 h-2', style: { left: '90%', top: '10%' } }
   ], []);
 
   return (
-    <section 
-      ref={containerRef}
-      id="projects" 
-      className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)'
-      }}
-    >
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div 
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage: `
-              radial-gradient(circle at 25% 25%, rgba(255,165,0,0.08) 0%, transparent 50%),
-              radial-gradient(circle at 75% 75%, rgba(34,197,94,0.06) 0%, transparent 50%),
-              radial-gradient(circle at 50% 50%, rgba(59,130,246,0.05) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(168,85,247,0.07) 0%, transparent 50%)
-            `
-          }}
-        />
-        
-        {/* Floating orbs */}
-        {floatingOrbs.map((orb, index) => (
-          <FloatingOrb key={index} {...orb} />
-        ))}
-      </div>
-
-      <motion.div 
-        style={{ y: smoothY, opacity }}
-        className="relative z-10 max-w-7xl mx-auto"
+    <>
+      <style jsx>{`
+        @keyframes floatProject {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          25% { transform: translate(15px, -25px) scale(1.1); }
+          50% { transform: translate(-10px, 15px) scale(0.9); }
+          75% { transform: translate(-15px, -10px) scale(1.05); }
+        }
+      `}</style>
+      
+      <section 
+        ref={containerRef}
+        id="projects" 
+        className="relative py-24 px-4 sm:px-6 lg:px-8 min-h-screen overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)'
+        }}
       >
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-20"
-        >
-          <motion.div className="relative inline-block mb-6">
-            <motion.h2 
-              className="text-5xl md:text-6xl font-bold relative"
-              whileHover={{ scale: 1.05 }}
-            >
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-emerald-400 via-blue-400 to-purple-400">
-                My Projects
-              </span>
-              <motion.div
-                className="absolute -inset-4 bg-gradient-to-r from-orange-400/15 via-emerald-400/15 via-blue-400/15 to-purple-400/15 rounded-2xl blur-xl"
-                animate={{ opacity: [0.4, 0.7, 0.4] }}
-                transition={{ duration: 4, repeat: Infinity }}
-              />
-            </motion.h2>
-            
-            <div className="flex items-center justify-center gap-2 mt-4">
-              <Sparkles className="w-5 h-5 text-blue-400" />
-              <p className="text-gray-400 text-lg">Building the future, one project at a time</p>
-              <Sparkles className="w-5 h-5 text-purple-400" />
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {projects.map((project, index) => (
-            <ProjectCard key={project.title} project={project} index={index} />
+        {/* Simplified Background */}
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0 opacity-15"
+            style={{
+              backgroundImage: `
+                radial-gradient(circle at 25% 25%, rgba(255,165,0,0.06) 0%, transparent 60%),
+                radial-gradient(circle at 75% 75%, rgba(34,197,94,0.05) 0%, transparent 60%),
+                radial-gradient(circle at 50% 50%, rgba(59,130,246,0.04) 0%, transparent 60%),
+                radial-gradient(circle at 80% 20%, rgba(168,85,247,0.05) 0%, transparent 60%)
+              `
+            }}
+          />
+          
+          {/* Optimized floating orbs */}
+          {floatingOrbs.map((orb, index) => (
+            <OptimizedFloatingOrb key={index} {...orb} />
           ))}
         </div>
 
-        {/* Bottom CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="text-center mt-20"
-        >
-          <div className="relative inline-block">
-            <div className="absolute -inset-4 bg-gradient-to-r from-orange-400/15 to-purple-400/15 rounded-2xl blur-xl" />
-            <p className="relative text-gray-300 text-lg px-8 py-4 bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-2xl">
-              Interested in collaborating or learning more about my work? Let's connect and create something extraordinary.
-            </p>
+        <div className="relative z-10 max-w-7xl mx-auto">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-20"
+          >
+            <div className="relative inline-block mb-6">
+              <h2 className="text-5xl md:text-6xl font-bold relative">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-emerald-400 via-blue-400 to-purple-400">
+                  My Projects
+                </span>
+              </h2>
+              
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <Sparkles className="w-5 h-5 text-blue-400" />
+                <p className="text-gray-400 text-lg">Building the future, one project at a time</p>
+                <Sparkles className="w-5 h-5 text-purple-400" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Projects Grid */}
+          <div ref={projectsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {projects.map((project, index) => (
+              <ProjectCard key={project.title} project={project} index={index} isVisible={projectsInView} />
+            ))}
           </div>
-        </motion.div>
-      </motion.div>
-    </section>
+
+          {/* Bottom CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="text-center mt-20"
+          >
+            <div className="relative inline-block">
+              <div className="absolute -inset-4 bg-gradient-to-r from-orange-400/15 to-purple-400/15 rounded-2xl blur-xl opacity-40" />
+              <p className="relative text-gray-300 text-lg px-8 py-4 bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-2xl">
+                Interested in collaborating or learning more about my work? Let's connect and create something extraordinary.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+    </>
   );
 };
 

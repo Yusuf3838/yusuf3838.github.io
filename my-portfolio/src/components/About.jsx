@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { Code, Database, Wrench, Monitor, Sparkles, Zap } from 'lucide-react';
 
-const SkillBubble = React.memo(({ skill, index, category, delay }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  
+const SkillBubble = React.memo(({ skill, category }) => {
   const categoryColors = {
     languages: 'from-orange-500 to-red-500',
     frameworks: 'from-green-500 to-emerald-500', 
@@ -48,54 +46,26 @@ const SkillBubble = React.memo(({ skill, index, category, delay }) => {
   }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.3, y: 50 }}
-      whileInView={{ opacity: 1, scale: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ 
-        delay: delay + (index * 0.05), 
-        duration: 0.4,
-        type: "spring",
-        stiffness: 100,
-        damping: 15
-      }}
-      whileHover={{ scale: 1.1, y: -5 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      className="relative group cursor-pointer"
-    >
-      <div className={`
-        relative px-4 py-2 rounded-full border border-white/20
-        bg-gradient-to-r ${categoryColors[category]}
-        shadow-lg transition-all duration-300
-        ${isHovered ? 'shadow-2xl' : ''}
-      `}>
-        <div className="flex items-center gap-2">
-          <img 
-            src={getSkillIcon(skill)} 
-            alt={skill}
-            className="w-4 h-4 object-contain"
-          />
-          <span className="text-white font-medium text-sm">{skill}</span>
-        </div>
-        
-        {isHovered && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className={`
-              absolute -inset-1 rounded-full blur-sm -z-10
-              bg-gradient-to-r ${categoryColors[category]} opacity-75
-            `}
-          />
-        )}
+    <div className={`
+      relative px-4 py-2 rounded-full border border-white/20
+      bg-gradient-to-r ${categoryColors[category]}
+      shadow-md transition-all duration-150 cursor-pointer
+      hover:scale-105 hover:shadow-lg hover:-translate-y-0.5
+    `}>
+      <div className="flex items-center gap-2">
+        <img 
+          src={getSkillIcon(skill)} 
+          alt={skill}
+          className="w-4 h-4 object-contain"
+          loading="lazy"
+        />
+        <span className="text-white font-medium text-sm">{skill}</span>
       </div>
-    </motion.div>
+    </div>
   );
 });
 
-const SkillCategory = React.memo(({ icon: Icon, title, skills, category, index }) => {
+const SkillCategory = React.memo(({ icon: Icon, title, skills, category, isVisible }) => {
   const categoryColors = {
     languages: { main: 'text-orange-400', gradient: 'from-orange-400/20 to-red-400/20' },
     frameworks: { main: 'text-green-400', gradient: 'from-green-400/20 to-emerald-400/20' },
@@ -107,15 +77,9 @@ const SkillCategory = React.memo(({ icon: Icon, title, skills, category, index }
   const colors = categoryColors[category];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -50 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ delay: index * 0.15, duration: 0.6 }}
-      className="mb-8"
-    >
+    <div className={`mb-6 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       <div className="flex items-center gap-3 mb-4">
-        <div className={`p-2 rounded-lg bg-gradient-to-r ${colors.gradient} backdrop-blur-sm`}>
+        <div className={`p-2 rounded-lg bg-gradient-to-r ${colors.gradient}`}>
           <Icon className={`w-5 h-5 ${colors.main}`} />
         </div>
         <h3 className={`text-lg font-semibold ${colors.main}`}>
@@ -124,35 +88,32 @@ const SkillCategory = React.memo(({ icon: Icon, title, skills, category, index }
       </div>
       
       <div className="flex flex-wrap gap-3">
-        {skills.map((skill, skillIndex) => (
+        {skills.map((skill) => (
           <SkillBubble
             key={skill}
             skill={skill}
-            index={skillIndex}
             category={category}
-            delay={index * 0.1}
           />
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 });
 
-const FloatingOrb = React.memo(({ className, size = "w-2 h-2", initialX, initialY }) => {
+const OptimizedFloatingOrb = React.memo(({ className, size = "w-2 h-2", style }) => {
   return (
     <motion.div
-      className={`absolute rounded-full ${className} ${size} blur-sm`}
-      style={{ left: initialX, top: initialY }}
+      className={`absolute rounded-full ${className} ${size} opacity-30`}
+      style={style}
       animate={{
-        x: [0, 30, -20, 0],
-        y: [0, -40, 20, 0],
-        opacity: [0.3, 0.8, 0.4, 0.3],
-        scale: [1, 1.2, 0.8, 1]
+        x: [0, 20, -10, 0],
+        y: [0, -20, 10, 0],
+        opacity: [0.2, 0.4, 0.2, 0.2]
       }}
       transition={{
-        duration: Math.random() * 10 + 15,
+        duration: 12 + Math.random() * 6,
         repeat: Infinity,
-        ease: "easeInOut"
+        ease: "linear" // More performance-friendly easing
       }}
     />
   );
@@ -160,14 +121,15 @@ const FloatingOrb = React.memo(({ className, size = "w-2 h-2", initialX, initial
 
 function About() {
   const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"]
+  const skillsRef = useRef(null);
+  const isInView = useInView(containerRef, { 
+    once: true, 
+    margin: "-100px" 
   });
-  
-  const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
-  const smoothY = useSpring(y, { stiffness: 100, damping: 30 });
+  const skillsInView = useInView(skillsRef, { 
+    once: true, 
+    margin: "-50px" 
+  });
 
   const skills = useMemo(() => ({
     languages: ['Swift', 'Kotlin', 'C++', 'C#', 'Java', 'JavaScript', 'Python'],
@@ -177,22 +139,23 @@ function About() {
     systems: ['Windows', 'UNIX', 'Linux', 'macOS']
   }), []);
 
+  // Simplified orb generation with better performance
   const orbs = useMemo(() => 
-    Array.from({ length: 8 }, (_, i) => ({
+    Array.from({ length: 6 }, (_, i) => ({ // Reduced from 8 to 6
       id: i,
       className: [
-        'bg-orange-400/30',
-        'bg-green-400/30', 
-        'bg-blue-400/30',
-        'bg-purple-400/30',
-        'bg-yellow-400/30',
-        'bg-pink-400/30',
-        'bg-cyan-400/30',
-        'bg-red-400/30'
-      ][i % 8],
-      size: Math.random() > 0.5 ? 'w-1 h-1' : 'w-2 h-2',
-      initialX: `${Math.random() * 100}%`,
-      initialY: `${Math.random() * 100}%`
+        'bg-orange-400/20',
+        'bg-green-400/20', 
+        'bg-blue-400/20',
+        'bg-purple-400/20',
+        'bg-yellow-400/20',
+        'bg-pink-400/20'
+      ][i],
+      size: 'w-1 h-1', // Consistent smaller size
+      style: {
+        left: `${20 + Math.random() * 60}%`,
+        top: `${20 + Math.random() * 60}%`
+      }
     }))
   , []);
 
@@ -205,65 +168,50 @@ function About() {
         background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)'
       }}
     >
-      {/* Animated Background */}
+      {/* Simplified Background */}
       <div className="absolute inset-0">
         <div 
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-10"
           style={{
             backgroundImage: `
-              radial-gradient(circle at 25% 25%, rgba(255,165,0,0.1) 0%, transparent 50%),
-              radial-gradient(circle at 75% 75%, rgba(34,197,94,0.08) 0%, transparent 50%),
-              radial-gradient(circle at 50% 50%, rgba(59,130,246,0.06) 0%, transparent 50%)
+              radial-gradient(circle at 25% 25%, rgba(255,165,0,0.08) 0%, transparent 60%),
+              radial-gradient(circle at 75% 75%, rgba(34,197,94,0.06) 0%, transparent 60%)
             `
           }}
         />
         
-        {/* Floating Orbs */}
+        {/* Reduced Floating Orbs */}
         {orbs.map((orb) => (
-          <FloatingOrb key={orb.id} {...orb} />
+          <OptimizedFloatingOrb key={orb.id} {...orb} />
         ))}
       </div>
 
-      <motion.div 
-        style={{ y: smoothY, opacity }}
-        className="relative z-10 max-w-6xl mx-auto"
-      >
+      <div className="relative z-10 max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <motion.h2 
-            className="text-5xl md:text-6xl font-bold mb-6 relative inline-block"
-            whileHover={{ scale: 1.05 }}
-          >
+          <h2 className="text-5xl md:text-6xl font-bold mb-6 relative inline-block">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-green-400 to-blue-400">
               About Me
             </span>
-            <motion.div
-              className="absolute -inset-4 bg-gradient-to-r from-orange-400/20 via-green-400/20 to-blue-400/20 rounded-2xl blur-xl"
-              animate={{ opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
-          </motion.h2>
+          </h2>
         </motion.div>
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Left Side - Description */}
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            initial={{ opacity: 0, x: -30 }}
+            animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
             className="space-y-8"
           >
             {/* About Text */}
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-orange-500/10 to-green-500/10 rounded-2xl blur-xl" />
               <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
                 <p className="text-lg text-gray-300 leading-relaxed mb-6">
                   I'm a passionate full stack developer with over 3 years of experience crafting 
@@ -304,13 +252,12 @@ function About() {
 
           {/* Right Side - Skills */}
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            ref={skillsRef}
+            initial={{ opacity: 0, x: 30 }}
+            animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 30 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl blur-xl" />
               <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <Sparkles className="w-6 h-6 text-blue-400" />
@@ -323,42 +270,42 @@ function About() {
                     title="Languages" 
                     skills={skills.languages} 
                     category="languages"
-                    index={0}
+                    isVisible={skillsInView}
                   />
                   <SkillCategory 
                     icon={Monitor} 
                     title="Frameworks & Libraries" 
                     skills={skills.frameworks} 
                     category="frameworks"
-                    index={1}
+                    isVisible={skillsInView}
                   />
                   <SkillCategory 
                     icon={Database} 
                     title="Databases" 
                     skills={skills.databases} 
                     category="databases"
-                    index={2}
+                    isVisible={skillsInView}
                   />
                   <SkillCategory 
                     icon={Wrench} 
                     title="Tools" 
                     skills={skills.tools} 
                     category="tools"
-                    index={3}
+                    isVisible={skillsInView}
                   />
                   <SkillCategory 
                     icon={Monitor} 
                     title="Operating Systems" 
                     skills={skills.systems} 
                     category="systems"
-                    index={4}
+                    isVisible={skillsInView}
                   />
                 </div>
               </div>
             </div>
           </motion.div>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }
