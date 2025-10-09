@@ -86,10 +86,6 @@ const Hero = () => {
     }
   }, []);
 
-  const handleClick = useCallback((e) => {
-    // Click effects removed for optimization
-  }, []);
-
   useEffect(() => {
     const heroEl = heroRef.current;
     if (heroEl && mounted) {
@@ -104,7 +100,7 @@ const Hero = () => {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+      <div className="snap-start snap-always min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <motion.div
           className="w-16 h-16 border-4 border-purple-400/30 border-t-purple-400 rounded-full"
           animate={{ rotate: 360 }}
@@ -118,7 +114,7 @@ const Hero = () => {
     <motion.section
       ref={heroRef}
       id="home"
-      className="relative min-h-screen w-full overflow-hidden bg-black pl-0 md:pl-20"
+      className="snap-start snap-always relative min-h-screen w-full overflow-hidden bg-black pl-0 md:pl-20"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
@@ -476,9 +472,6 @@ const Hero = () => {
           </motion.div>
         </motion.div>
       </div>
-
-      {/* Enhanced click effects with more sophisticated animations */}
-      {/* Click effects removed for optimization */}
 
       {/* Subtle edge enhancement */}
       <motion.div
