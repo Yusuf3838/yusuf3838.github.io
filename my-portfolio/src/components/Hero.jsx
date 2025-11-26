@@ -1,7 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+// Lazy load Three.js and OrbitControls - only loads when Hero mounts
+const loadThreeJS = async () => {
+  const THREE = await import('three');
+  const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js');
+  return { THREE, OrbitControls };
+};
 
 const Hero = () => {
   const canvasRef = useRef(null);
@@ -12,6 +17,7 @@ const Hero = () => {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [threeLoaded, setThreeLoaded] = useState(false);
   
   const animationFrameRef = useRef();
   const controlsRef = useRef();
@@ -20,7 +26,7 @@ const Hero = () => {
   const cameraRef = useRef();
   const meshRef = useRef();
 
-  // CRITICAL: Intersection Observer to detect when hero is visible
+  // CRITICAL: Intersection Observer
   useEffect(() => {
     if (!sectionRef.current) return;
 
@@ -29,8 +35,6 @@ const Hero = () => {
         entries.forEach((entry) => {
           setIsVisible(entry.isIntersecting);
           
-          // When not visible, disable controls to save resources
-          // But keep the canvas visible (with last frame) to prevent black flash
           if (controlsRef.current) {
             controlsRef.current.enabled = entry.isIntersecting;
           }
@@ -39,7 +43,7 @@ const Hero = () => {
         });
       },
       {
-        threshold: 0.1, // Trigger when 10% of hero is visible
+        threshold: 0.1,
         rootMargin: '0px',
       }
     );
@@ -56,220 +60,226 @@ const Hero = () => {
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Scene setup
-    const scene = new THREE.Scene();
-    sceneRef.current = scene;
-    
-    // Camera setup
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    camera.position.set(0, 0, 0.1);
-    cameraRef.current = camera;
+    let cleanup;
 
-    // Renderer setup with performance optimizations
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      antialias: window.devicePixelRatio <= 1,
-      powerPreference: 'high-performance',
-      stencil: false,
-      depth: false,
-      preserveDrawingBuffer: true, // Keep last frame when paused
-    });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-    rendererRef.current = renderer;
+    // Async function to load Three.js and setup scene
+    const initThreeJS = async () => {
+      try {
+        console.log('Loading Three.js...');
+        const { THREE, OrbitControls } = await loadThreeJS();
+        setThreeLoaded(true);
+        console.log('Three.js loaded successfully');
 
-    // OPTIMIZATION 1: Reduced geometry (32x16 instead of 60x40)
-    const geometry = new THREE.SphereGeometry(500, 32, 16);
-    
-    // Texture loader
-    const loadingManager = new THREE.LoadingManager();
-    
-    loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
-      console.log('Started loading:', url);
-      setLoadingProgress(0);
-    };
+        // Scene setup
+        const scene = new THREE.Scene();
+        sceneRef.current = scene;
+        
+        // Camera setup
+        const camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        camera.position.set(0, 0, 0.1);
+        cameraRef.current = camera;
 
-    loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-      const progress = (itemsLoaded / itemsTotal) * 100;
-      console.log(`Loading progress: ${progress.toFixed(0)}%`);
-      setLoadingProgress(progress);
-    };
-    
-    loadingManager.onLoad = () => {
-      console.log('Panorama loaded successfully');
-      setLoadingProgress(100);
-      // Small delay to show 100% before hiding
-      setTimeout(() => setIsLoading(false), 300);
-    };
+        // Renderer setup
+        const renderer = new THREE.WebGLRenderer({
+          canvas: canvasRef.current,
+          antialias: window.devicePixelRatio <= 1,
+          powerPreference: 'high-performance',
+          stencil: false,
+          depth: false,
+          preserveDrawingBuffer: true,
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        rendererRef.current = renderer;
 
-    loadingManager.onError = (url) => {
-      console.error('Error loading texture:', url);
-      setLoadError(true);
-      setIsLoading(false);
-    };
+        // Reduced geometry
+        const geometry = new THREE.SphereGeometry(500, 32, 16);
+        
+        // Texture loader
+        const loadingManager = new THREE.LoadingManager();
+        
+        loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
+          console.log('Started loading:', url);
+          setLoadingProgress(0);
+        };
 
-    const textureLoader = new THREE.TextureLoader(loadingManager);
-    
-    // OPTIMIZATION 2: Load appropriate resolution based on screen size
-    const getOptimalTextureURL = () => {
-      const width = window.innerWidth;
-      
-      // Use 1K for mobile, 2K for desktop (Poly Haven JPG)
-      if (width < 768) {
-        return 'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/qwantani_dusk_2.jpg';
-      }
-      return 'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/qwantani_dusk_2.jpg';
-    };
-    
-    const texture = textureLoader.load(
-      getOptimalTextureURL(),
-      () => {
-        console.log('Texture loaded');
-      },
-      undefined,
-      (error) => {
-        console.error('Texture loading error:', error);
+        loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+          const progress = (itemsLoaded / itemsTotal) * 100;
+          console.log(`Loading progress: ${progress.toFixed(0)}%`);
+          setLoadingProgress(progress);
+        };
+        
+        loadingManager.onLoad = () => {
+          console.log('Panorama loaded successfully');
+          setLoadingProgress(100);
+          setTimeout(() => setIsLoading(false), 300);
+        };
+
+        loadingManager.onError = (url) => {
+          console.error('Error loading texture:', url);
+          setLoadError(true);
+          setIsLoading(false);
+        };
+
+        const textureLoader = new THREE.TextureLoader(loadingManager);
+        
+        const getOptimalTextureURL = () => {
+          const width = window.innerWidth;
+          if (width < 768) {
+            return 'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/qwantani_dusk_2.jpg';
+          }
+          return 'https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/qwantani_dusk_2.jpg';
+        };
+        
+        const texture = textureLoader.load(
+          getOptimalTextureURL(),
+          () => {
+            console.log('Texture loaded');
+          },
+          undefined,
+          (error) => {
+            console.error('Texture loading error:', error);
+            setLoadError(true);
+            setIsLoading(false);
+          }
+        );
+        
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = false;
+        
+        const material = new THREE.MeshBasicMaterial({
+          map: texture,
+          side: THREE.BackSide,
+        });
+
+        const sphere = new THREE.Mesh(geometry, material);
+        meshRef.current = sphere;
+        scene.add(sphere);
+
+        // OrbitControls setup
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controlsRef.current = controls;
+        
+        controls.enableZoom = false;
+        controls.enablePan = false;
+        controls.rotateSpeed = -0.5;
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minPolarAngle = 0;
+        controls.maxPolarAngle = Math.PI;
+        controls.target.set(0, 0, 0);
+        controls.update();
+
+        // Track dragging
+        const onPointerDown = () => {
+          setIsDragging(true);
+          setHasInteracted(true);
+        };
+        const onPointerUp = () => setIsDragging(false);
+        const onPointerCancel = () => setIsDragging(false);
+        
+        renderer.domElement.addEventListener('pointerdown', onPointerDown);
+        renderer.domElement.addEventListener('pointerup', onPointerUp);
+        renderer.domElement.addEventListener('pointercancel', onPointerCancel);
+
+        // Handle resize
+        let resizeTimeout;
+        const handleResize = () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+          }, 100);
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        // Reduced motion
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) {
+          controls.enableDamping = false;
+        }
+
+        // Tab visibility
+        let isTabVisible = true;
+        const handleVisibilityChange = () => {
+          isTabVisible = !document.hidden;
+          console.log('Tab visible:', isTabVisible);
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // Animation loop
+        const animate = () => {
+          animationFrameRef.current = requestAnimationFrame(animate);
+          
+          if (isTabVisible && isVisible && !isLoading) {
+            controls.update();
+            renderer.render(scene, camera);
+          }
+        };
+
+        animate();
+
+        // Auto-hide hint
+        const hintTimeout = setTimeout(() => {
+          setHasInteracted(true);
+        }, 4000);
+
+        // Setup cleanup function
+        cleanup = () => {
+          console.log('Cleaning up Three.js resources...');
+          
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+          }
+          
+          clearTimeout(hintTimeout);
+          clearTimeout(resizeTimeout);
+          
+          window.removeEventListener('resize', handleResize);
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+          renderer.domElement.removeEventListener('pointerup', onPointerUp);
+          renderer.domElement.removeEventListener('pointercancel', onPointerCancel);
+          
+          geometry.dispose();
+          material.dispose();
+          texture.dispose();
+          renderer.dispose();
+          controls.dispose();
+          
+          sceneRef.current = null;
+          cameraRef.current = null;
+          rendererRef.current = null;
+          controlsRef.current = null;
+          meshRef.current = null;
+          
+          console.log('Cleanup complete');
+        };
+      } catch (error) {
+        console.error('Error loading Three.js:', error);
         setLoadError(true);
         setIsLoading(false);
       }
-    );
-    
-    // Configure texture with optimizations
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.generateMipmaps = false;
-    
-    // Create material
-    const material = new THREE.MeshBasicMaterial({
-      map: texture,
-      side: THREE.BackSide,
-    });
-
-    const sphere = new THREE.Mesh(geometry, material);
-    meshRef.current = sphere;
-    scene.add(sphere);
-
-    // OrbitControls setup
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controlsRef.current = controls;
-    
-    controls.enableZoom = false;
-    controls.enablePan = false;
-    controls.rotateSpeed = -0.5;
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.minPolarAngle = 0;
-    controls.maxPolarAngle = Math.PI;
-    controls.target.set(0, 0, 0);
-    controls.update();
-
-    // Track dragging state
-    const onPointerDown = () => {
-      setIsDragging(true);
-      setHasInteracted(true);
-    };
-    const onPointerUp = () => setIsDragging(false);
-    const onPointerCancel = () => setIsDragging(false);
-    
-    renderer.domElement.addEventListener('pointerdown', onPointerDown);
-    renderer.domElement.addEventListener('pointerup', onPointerUp);
-    renderer.domElement.addEventListener('pointercancel', onPointerCancel);
-
-    // Handle window resize with debounce
-    let resizeTimeout;
-    const handleResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-        
-        renderer.setSize(width, height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-      }, 100);
     };
 
-    window.addEventListener('resize', handleResize);
+    initThreeJS();
 
-    // Check for reduced motion preference
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
-      controls.enableDamping = false;
-    }
-
-    // Pause rendering when tab is hidden
-    let isTabVisible = true;
-    const handleVisibilityChange = () => {
-      isTabVisible = !document.hidden;
-      console.log('Tab visible:', isTabVisible);
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // OPTIMIZATION 3: Animation loop with visibility check
-    // When not visible, stop rendering but keep last frame on canvas
-    const animate = () => {
-      animationFrameRef.current = requestAnimationFrame(animate);
-      
-      // Only render when:
-      // 1. Tab is visible
-      // 2. Hero section is in viewport (isVisible)
-      // 3. Not loading
-      // The canvas stays visible with the last frame to prevent black flash
-      if (isTabVisible && isVisible && !isLoading) {
-        controls.update();
-        renderer.render(scene, camera);
-      }
-    };
-
-    animate();
-
-    // Auto-hide hint after 4 seconds
-    const hintTimeout = setTimeout(() => {
-      setHasInteracted(true);
-    }, 4000);
-
-    // CRITICAL CLEANUP
     return () => {
-      console.log('Cleaning up Three.js resources...');
-      
-      // Cancel animation frame
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      
-      clearTimeout(hintTimeout);
-      clearTimeout(resizeTimeout);
-      
-      // Remove event listeners
-      window.removeEventListener('resize', handleResize);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      renderer.domElement.removeEventListener('pointerdown', onPointerDown);
-      renderer.domElement.removeEventListener('pointerup', onPointerUp);
-      renderer.domElement.removeEventListener('pointercancel', onPointerCancel);
-      
-      // Dispose Three.js resources
-      geometry.dispose();
-      material.dispose();
-      texture.dispose();
-      renderer.dispose();
-      controls.dispose();
-      
-      // Clear references
-      sceneRef.current = null;
-      cameraRef.current = null;
-      rendererRef.current = null;
-      controlsRef.current = null;
-      meshRef.current = null;
-      
-      console.log('Cleanup complete');
+      if (cleanup) cleanup();
     };
   }, [isLoading, isVisible]);
 
@@ -279,7 +289,7 @@ const Hero = () => {
       id="home"
       className="snap-start snap-always relative w-full h-screen overflow-hidden bg-black"
     >
-      {/* Three.js Canvas - Stays visible with last frame to prevent black flash */}
+      {/* Three.js Canvas */}
       <canvas
         ref={canvasRef}
         className={`absolute inset-0 transition-opacity duration-1000 ${
@@ -287,8 +297,6 @@ const Hero = () => {
         } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ 
           userSelect: 'none',
-          // Canvas stays visible (preserveDrawingBuffer keeps last frame)
-          // Animation loop pauses when scrolled away for performance
         }}
       />
 
@@ -331,7 +339,7 @@ const Hero = () => {
                 />
               </motion.div>
               
-              {/* Percentage in center */}
+              {/* Percentage */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <motion.span 
                   className="text-2xl font-bold text-white"
@@ -339,6 +347,9 @@ const Hero = () => {
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.3 }}
+                  style={{
+                    textShadow: '0 0 20px rgba(255,255,255,0.5)',
+                  }}
                 >
                   {Math.round(loadingProgress)}%
                 </motion.span>
@@ -351,10 +362,20 @@ const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h3 className="text-xl font-semibold text-white mb-3 tracking-wide">
+              <h3 
+                className="text-xl font-semibold text-white mb-3 tracking-wide"
+                style={{
+                  textShadow: '0 2px 10px rgba(0,0,0,0.8)',
+                }}
+              >
                 Loading Panorama
               </h3>
-              <p className="text-white/60 text-sm tracking-wider uppercase mb-6">
+              <p 
+                className="text-white/60 text-sm tracking-wider uppercase mb-6"
+                style={{
+                  textShadow: '0 2px 10px rgba(0,0,0,0.8)',
+                }}
+              >
                 Preparing your immersive experience
               </p>
             </motion.div>
@@ -371,7 +392,7 @@ const Hero = () => {
                 }}
               />
               
-              {/* Shimmer effect */}
+              {/* Shimmer */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                 animate={{ x: ['-100%', '200%'] }}
@@ -380,15 +401,19 @@ const Hero = () => {
               />
             </div>
             
-            {/* Loading stages text */}
+            {/* Loading stages */}
             <motion.p 
               className="mt-4 text-white/40 text-xs tracking-wider"
               animate={{ opacity: [0.4, 0.7, 0.4] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              style={{
+                textShadow: '0 2px 10px rgba(0,0,0,0.8)',
+              }}
             >
-              {loadingProgress < 30 && "Initializing 3D environment..."}
-              {loadingProgress >= 30 && loadingProgress < 70 && "Loading high-resolution textures..."}
-              {loadingProgress >= 70 && loadingProgress < 100 && "Finalizing scene..."}
+              {!threeLoaded && "Loading 3D engine..."}
+              {threeLoaded && loadingProgress < 30 && "Initializing 3D environment..."}
+              {threeLoaded && loadingProgress >= 30 && loadingProgress < 70 && "Loading high-resolution textures..."}
+              {threeLoaded && loadingProgress >= 70 && loadingProgress < 100 && "Finalizing scene..."}
               {loadingProgress === 100 && "Ready!"}
             </motion.p>
           </div>
@@ -415,7 +440,7 @@ const Hero = () => {
         </div>
       )}
 
-      {/* Minimal UI Overlay - Just your name */}
+      {/* UI Overlay */}
       <motion.div 
         className="absolute inset-0 pointer-events-none z-10 flex flex-col items-center justify-center"
         initial={{ opacity: 0 }}
